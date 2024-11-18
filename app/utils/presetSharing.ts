@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const encodePreset = (preset: DicePreset): string => {
   const diceStr = preset.dice.map(die => {
-    return `d${die.sides},${die.values.join(',')}`;
+    return `d${die.sides},${die.values.join('|')}`;
   }).join(';');
 
   const encoded = Buffer.from(`${preset.name}:${diceStr}`).toString('base64');
@@ -27,10 +27,7 @@ export const decodePreset = (encoded: string): DicePreset | null => {
     const dice: Dice[] = diceStr.split(';').map(dieStr => {
       const [dType, valuesStr] = dieStr.split(',');
       const sides = parseInt(dType.substring(1));
-      const values = valuesStr.split(',').map(value => {
-        const numericValue = parseInt(value);
-        return isNaN(numericValue) ? value : numericValue;
-      });
+      const values = valuesStr.split('|');
 
       return {
         id: uuidv4(),
