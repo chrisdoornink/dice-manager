@@ -1,11 +1,13 @@
 import { Box, List, ListItem, ListItemText, Typography, Divider } from "@mui/material";
 import { RollHistoryItem, RollGroup } from "./types";
-
+import { useTheme } from "../../../contexts/ThemeContext";
 interface RollHistoryListProps {
   history: RollHistoryItem[];
 }
 
 export default function RollHistoryList({ history }: RollHistoryListProps) {
+  const { theme } = useTheme();
+
   if (history.length === 0) {
     return (
       <Box sx={{ textAlign: "center", color: "text.secondary", mt: 4 }}>
@@ -16,7 +18,7 @@ export default function RollHistoryList({ history }: RollHistoryListProps) {
 
   // Group rolls by timestamp
   const groupedRolls: RollGroup[] = history.reduce((groups: RollGroup[], item) => {
-    const existingGroup = groups.find(g => g.timestamp === item.timestamp);
+    const existingGroup = groups.find((g) => g.timestamp === item.timestamp);
     if (existingGroup) {
       existingGroup.rolls.push(item);
     } else {
@@ -32,13 +34,13 @@ export default function RollHistoryList({ history }: RollHistoryListProps) {
           <Typography
             variant="caption"
             sx={{
-              color: "text.secondary",
+              color: theme.buttonText,
               display: "block",
               px: 2,
               py: 0.5,
               borderBottom: "1px solid",
-              borderColor: "divider",
-              bgcolor: "background.paper",
+              borderColor: theme.buttonBorder,
+              bgcolor: theme.background,
             }}
           >
             {new Date(group.timestamp).toLocaleTimeString()}
@@ -53,7 +55,9 @@ export default function RollHistoryList({ history }: RollHistoryListProps) {
             >
               <ListItemText
                 primary={
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
                     <Typography variant="body2">{item.dieName}</Typography>
                     <Typography variant="body1" sx={{ fontWeight: "medium" }}>
                       {item.value}

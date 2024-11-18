@@ -11,7 +11,7 @@ import { DEFAULT_DICE, DEFAULT_PRESETS, type Dice, type DicePreset } from "./con
 import { VenmoButton } from "../VenmoButton";
 import { storage } from "../../../lib/storage";
 import { StorageItems } from "../../../lib/storage/constants";
-
+import { useTheme } from "@/app/contexts/ThemeContext";
 const DiceManager = () => {
   // Initialize with empty arrays to match server-side render
   const [dice, setDice] = useState<Dice[]>([]);
@@ -26,6 +26,7 @@ const DiceManager = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [rollTime, setRollTime] = useState(2000);
+  const { theme } = useTheme();
 
   // Load data from localStorage only after initial render
   useEffect(() => {
@@ -70,7 +71,7 @@ const DiceManager = () => {
       const newPreset: DicePreset = {
         id: uuidv4(),
         name: newPresetName.trim(),
-        dice: [...dice]
+        dice: [...dice],
       };
       setPresets([...presets, newPreset]);
       setSavePresetOpen(false);
@@ -79,38 +80,38 @@ const DiceManager = () => {
   };
 
   const loadPreset = (preset: DicePreset) => {
-    setDice(preset.dice.map(die => ({ ...die, id: uuidv4() })));
+    setDice(preset.dice.map((die) => ({ ...die, id: uuidv4() })));
     setLoadPresetOpen(false);
   };
 
   const deletePreset = (presetId: string) => {
-    setPresets(presets.filter(p => p.id !== presetId));
+    setPresets(presets.filter((p) => p.id !== presetId));
   };
 
   const rollDice = () => {
-    const diceToRoll = dice.filter(d => !lockedDice.has(d.id));
+    const diceToRoll = dice.filter((d) => !lockedDice.has(d.id));
     setRolling(true);
-    
+
     setTimeout(() => {
-      const newDice = dice.map(die => {
+      const newDice = dice.map((die) => {
         if (!lockedDice.has(die.id)) {
           const newValue = Math.floor(Math.random() * die.values.length);
           return {
             ...die,
-            currentValue: newValue
+            currentValue: newValue,
           };
         }
         return die;
       });
 
       const timestamp = Date.now();
-      const newRolls = diceToRoll.map(die => {
-        const newDie = newDice.find(d => d.id === die.id);
+      const newRolls = diceToRoll.map((die) => {
+        const newDie = newDice.find((d) => d.id === die.id);
         return {
           id: uuidv4(),
           dieName: `d${die.sides}`,
           value: newDie ? newDie.values[newDie.currentValue] : die.values[die.currentValue],
-          timestamp
+          timestamp,
         };
       });
 
@@ -121,7 +122,7 @@ const DiceManager = () => {
   };
 
   const toggleDieLock = (die: Dice) => {
-    setLockedDice(prev => {
+    setLockedDice((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(die.id)) {
         newSet.delete(die.id);
@@ -133,33 +134,34 @@ const DiceManager = () => {
   };
 
   return (
-    <Container 
-      maxWidth={false} 
-      sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
+    <Container
+      maxWidth={false}
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
         px: { xs: 2, sm: 4 },
-        py: { xs: 2, sm: 4 }
+        py: { xs: 2, sm: 4 },
+        backgroundColor: theme.background,
       }}
     >
       {/* Top Controls */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: "flex",
           gap: 2,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          mb: 4
+          flexWrap: "wrap",
+          justifyContent: "center",
+          mb: 4,
         }}
       >
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           onClick={addDice}
-          sx={{ 
+          sx={{
             minWidth: 100,
-            color: 'text.secondary',
-            borderColor: 'divider'
+            color: theme.buttonText,
+            borderColor: theme.buttonBorder,
           }}
         >
           Add Die
@@ -168,33 +170,33 @@ const DiceManager = () => {
           variant="outlined"
           onClick={() => setHistoryOpen(true)}
           startIcon={<HistoryIcon />}
-          sx={{ 
+          sx={{
             minWidth: 100,
-            color: 'text.secondary',
-            borderColor: 'divider'
+            color: theme.buttonText,
+            borderColor: theme.buttonBorder,
           }}
         >
           History
         </Button>
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           onClick={() => setSavePresetOpen(true)}
           disabled={dice.length === 0}
-          sx={{ 
+          sx={{
             minWidth: 100,
-            color: 'text.secondary',
-            borderColor: 'divider'
+            color: theme.buttonText,
+            borderColor: theme.buttonBorder,
           }}
         >
           Save Preset
         </Button>
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           onClick={() => setLoadPresetOpen(true)}
-          sx={{ 
+          sx={{
             minWidth: 100,
-            color: 'text.secondary',
-            borderColor: 'divider'
+            color: theme.buttonText,
+            borderColor: theme.buttonBorder,
           }}
         >
           Load Preset
@@ -202,7 +204,7 @@ const DiceManager = () => {
       </Box>
 
       {/* Roll Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
         <Button
           variant="contained"
           onClick={rollDice}
@@ -211,29 +213,33 @@ const DiceManager = () => {
             minWidth: 200,
             py: 1.5,
             px: 4,
-            fontSize: '1.1rem'
+            fontSize: "1.1rem",
           }}
         >
-          {rolling ? 'Rolling...' : lockedDice.size > 0 ? `Roll ${dice.length - lockedDice.size} Dice` : "Roll All"}
+          {rolling
+            ? "Rolling..."
+            : lockedDice.size > 0
+            ? `Roll ${dice.length - lockedDice.size} Dice`
+            : "Roll All"}
         </Button>
       </Box>
 
       {/* Centered Dice Area */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          my: 4
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          my: 4,
         }}
       >
-        <Grid 
-          container 
+        <Grid
+          container
           spacing={3}
           justifyContent="center"
           alignItems="center"
-          sx={{ maxWidth: 'lg' }}
+          sx={{ maxWidth: "lg" }}
         >
           {dice.map((die) => (
             <Grid item key={die.id}>
@@ -251,55 +257,61 @@ const DiceManager = () => {
       </Box>
 
       {/* Bottom Controls */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
-        gap: 3,
-        mt: 'auto', 
-        pt: 4 
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
+          mt: "auto",
+          pt: 4,
+        }}
+      >
         {/* Roll Speed Controls */}
-        <Box sx={{ 
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          p: 2,
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          opacity: 0.8
-        }}>
-          <Button 
-            variant="outlined" 
-            size="small" 
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            p: 2,
+            borderRadius: 1,
+            bgcolor: theme.background,
+            opacity: 0.8,
+          }}
+        >
+          <Button
+            variant="outlined"
+            size="small"
             onClick={() => setRollTime(Math.max(1000, rollTime - 1000))}
             disabled={rollTime <= 1000}
-            sx={{ 
+            sx={{
               minWidth: 80,
-              color: 'text.secondary',
-              borderColor: 'divider',
-              fontSize: '0.75rem'
+              color: theme.buttonText,
+              borderColor: theme.buttonBorder,
+              fontSize: "0.75rem",
             }}
           >
             Faster
           </Button>
-          <Box sx={{ 
-            px: 2,
-            color: 'text.secondary',
-            fontSize: '0.75rem'
-          }}>
+          <Box
+            sx={{
+              px: 2,
+              color: theme.buttonText,
+              fontSize: "0.75rem",
+            }}
+          >
             Roll Time: {rollTime / 1000}s
           </Box>
-          <Button 
-            variant="outlined" 
-            size="small" 
+          <Button
+            variant="outlined"
+            size="small"
             onClick={() => setRollTime(Math.min(10000, rollTime + 1000))}
             disabled={rollTime >= 10000}
-            sx={{ 
+            sx={{
               minWidth: 80,
-              color: 'text.secondary',
-              borderColor: 'divider',
-              fontSize: '0.75rem'
+              color: theme.buttonText,
+              borderColor: theme.buttonBorder,
+              fontSize: "0.75rem",
             }}
           >
             Slower
@@ -322,7 +334,9 @@ const DiceManager = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSavePresetOpen(false)}>Cancel</Button>
-          <Button onClick={savePreset} variant="contained">Save</Button>
+          <Button onClick={savePreset} variant="contained">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -334,13 +348,13 @@ const DiceManager = () => {
               key={preset.id}
               sx={{
                 p: 2,
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 borderBottom: 1,
-                borderColor: 'divider',
-                '&:last-child': {
-                  borderBottom: 0
-                }
+                borderColor: "divider",
+                "&:last-child": {
+                  borderBottom: 0,
+                },
               }}
             >
               <Box sx={{ flex: 1 }}>{preset.name}</Box>

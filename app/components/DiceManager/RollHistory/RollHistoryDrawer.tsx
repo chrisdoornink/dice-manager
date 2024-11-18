@@ -2,6 +2,7 @@ import { Drawer, Box, Typography, IconButton, Link } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import RollHistoryList from "./RollHistoryList";
 import { RollHistoryItem } from "./types";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 interface RollHistoryDrawerProps {
   open: boolean;
@@ -10,7 +11,14 @@ interface RollHistoryDrawerProps {
   history: RollHistoryItem[];
 }
 
-export default function RollHistoryDrawer({ open, onClose, onClear, history }: RollHistoryDrawerProps) {
+export default function RollHistoryDrawer({
+  open,
+  onClose,
+  onClear,
+  history,
+}: RollHistoryDrawerProps) {
+  const { theme } = useTheme();
+
   return (
     <Drawer
       anchor="right"
@@ -20,6 +28,8 @@ export default function RollHistoryDrawer({ open, onClose, onClear, history }: R
         sx: {
           width: 300,
           p: 2,
+          bgcolor: theme.background,
+          color: theme.buttonText,
         },
       }}
     >
@@ -31,7 +41,7 @@ export default function RollHistoryDrawer({ open, onClose, onClear, history }: R
             variant="caption"
             onClick={onClear}
             sx={{
-              color: "text.secondary",
+              color: theme.buttonText,
               textDecoration: "none",
               "&:hover": {
                 textDecoration: "underline",

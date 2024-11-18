@@ -2,6 +2,7 @@ import { Box, Button, Dialog, FormControl, TextField } from "@mui/material";
 import LockIcon from '@mui/icons-material/Lock';
 import React, { useEffect, useState } from "react";
 import type { Dice } from "./constants";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 interface DiceItemProps {
   die: Dice;
@@ -12,27 +13,26 @@ interface DiceItemProps {
   onToggleSelect: (die: Dice) => void;
 }
 
-const DiceItem: React.FC<DiceItemProps> = ({ 
-  die, 
-  onUpdate, 
-  onDelete, 
+const DiceItem: React.FC<DiceItemProps> = ({
+  die,
+  onUpdate,
+  onDelete,
   rolling,
   selected,
-  onToggleSelect 
+  onToggleSelect,
 }) => {
   const [open, setOpen] = useState(false);
   const [displayValue, setDisplayValue] = useState(
     die.values[die.currentValue] || die.currentValue + 1
   );
   const [rotationDeg, setRotationDeg] = useState(0);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (rolling && !selected) {
       const interval = setInterval(() => {
-        setDisplayValue(
-          die.values[Math.floor(Math.random() * die.values.length)]
-        );
-        setRotationDeg(prev => prev + 90);
+        setDisplayValue(die.values[Math.floor(Math.random() * die.values.length)]);
+        setRotationDeg((prev) => prev + 90);
       }, 100);
 
       return () => clearInterval(interval);
@@ -43,10 +43,10 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
   const getFontSize = (value: string | number) => {
     const length = value.toString().length;
-    if (length <= 2) return '2rem';
-    if (length <= 3) return '1.5rem';
-    if (length <= 4) return '1.25rem';
-    return '1rem';
+    if (length <= 2) return "2rem";
+    if (length <= 3) return "1.5rem";
+    if (length <= 4) return "1.25rem";
+    return "1rem";
   };
 
   const dieFaceStyles = {
@@ -58,30 +58,30 @@ const DiceItem: React.FC<DiceItemProps> = ({
     justifyContent: "center",
     fontSize: getFontSize(displayValue),
     fontWeight: "bold",
-    backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
-    color: "#444444",
-    textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-    boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
+    backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
+    color: theme.dieFaceText,
+    textShadow: `0px 1px 0px ${theme.textShadowLight}, 0px -1px 0px ${theme.textShadowDark}`,
+    boxShadow: `inset 0 0 10px ${theme.boxShadow}`,
     borderRadius: "4px",
     backfaceVisibility: "hidden",
-    transition: "background-color 0.2s ease-in-out"
+    transition: "background-color 0.2s ease-in-out",
   };
 
   const handleUpdate = (event: React.FormEvent) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
     const values = formData.get("values") as string;
-    const newValues = values ? values.split(",").map(v => v.trim()) : [];
+    const newValues = values ? values.split(",").map((v) => v.trim()) : [];
 
     // Ensure we have at least one value
     if (newValues.length === 0) {
       newValues.push("1");
     }
 
-    onUpdate({ 
-      ...die, 
+    onUpdate({
+      ...die,
       sides: newValues.length,
-      values: newValues 
+      values: newValues,
     });
     setOpen(false);
   };
@@ -90,7 +90,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
     <Box
       sx={{
         p: 2,
-        backgroundColor: "background.paper",
+        backgroundColor: theme.background,
         borderRadius: 2,
         display: "flex",
         flexDirection: "column",
@@ -104,8 +104,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
             opacity: 0.2,
           },
           "& .die-face": {
-            backgroundColor: "#F8F8F3",
-          }
+            backgroundColor: theme.dieFaceBackgroundHover,
+          },
         },
       }}
       onClick={() => onToggleSelect(die)}
@@ -128,7 +128,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
           <LockIcon fontSize="inherit" />
         </Box>
       )}
-      
+
       {/* Lock icon for selected state */}
       {selected && (
         <Box
@@ -148,7 +148,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
         sx={{
           mb: 1,
           textAlign: "center",
-          color: "#666666",
+          color: theme.labelText,
           fontSize: "0.875rem",
         }}
         data-testid={`die-label-${die.name.toLowerCase()}`}
@@ -164,24 +164,24 @@ const DiceItem: React.FC<DiceItemProps> = ({
             ml: 1,
             cursor: "pointer",
             fontSize: "0.75rem",
-            color: "#999999",
+            color: theme.editButtonText,
             "&:hover": {
-              color: "#666666",
-              textDecoration: "underline"
-            }
+              color: theme.editButtonHoverText,
+              textDecoration: "underline",
+            },
           }}
           data-testid={`edit-die-${die.name.toLowerCase()}`}
         >
           edit
         </Box>
       </Box>
-      
+
       <Box
         sx={{
           width: 80,
           height: 80,
           perspective: "200px",
-          position: "relative"
+          position: "relative",
         }}
       >
         <Box
@@ -190,9 +190,10 @@ const DiceItem: React.FC<DiceItemProps> = ({
             height: "100%",
             position: "relative",
             transformStyle: "preserve-3d",
-            transform: rolling && !selected ? 
-              `rotateX(${rotationDeg}deg) rotateY(${rotationDeg * 1.5}deg)` : 
-              "rotateX(-10deg) rotateY(15deg)",
+            transform:
+              rolling && !selected
+                ? `rotateX(${rotationDeg}deg) rotateY(${rotationDeg * 1.5}deg)`
+                : "rotateX(-10deg) rotateY(15deg)",
             transition: "transform 0.1s ease-in-out",
           }}
         >
@@ -213,8 +214,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
             sx={{
               ...dieFaceStyles,
               transform: "translateZ(-40px) rotateX(180deg)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
+              border: `1px solid ${theme.dieFaceBorder}`,
+              backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
             }}
           >
             {displayValue}
@@ -228,8 +229,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
               width: "80px",
               height: "80px",
               transform: "rotateY(90deg) translateZ(40px)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
+              border: `1px solid ${theme.dieFaceBorder}`,
+              backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
             }}
           >
             {displayValue}
@@ -243,8 +244,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
               width: "80px",
               height: "80px",
               transform: "rotateY(-90deg) translateZ(40px)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              backgroundColor: selected ? "#F5F5F0" : "#F5F5EA",
+              border: `1px solid ${theme.dieFaceBorder}`,
+              backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
             }}
           >
             {displayValue}
@@ -258,8 +259,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
               width: "80px",
               height: "80px",
               transform: "rotateX(90deg) translateZ(40px)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
+              border: `1px solid ${theme.dieFaceBorder}`,
+              backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
             }}
           >
             {displayValue}
@@ -273,8 +274,8 @@ const DiceItem: React.FC<DiceItemProps> = ({
               width: "80px",
               height: "80px",
               transform: "rotateX(-90deg) translateZ(40px)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
+              border: `1px solid ${theme.dieFaceBorder}`,
+              backgroundColor: selected ? theme.dieFaceBackgroundSelected : theme.dieFaceBackground,
             }}
           >
             {displayValue}
@@ -288,7 +289,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
           onSubmit={handleUpdate}
           sx={{
             p: 2,
-            minWidth: 300
+            minWidth: 300,
           }}
         >
           <FormControl fullWidth>
@@ -326,7 +327,9 @@ const DiceItem: React.FC<DiceItemProps> = ({
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" variant="contained">Save</Button>
+              <Button type="submit" variant="contained">
+                Save
+              </Button>
             </Box>
           </Box>
         </Box>
