@@ -134,7 +134,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
         <Box
           sx={{
             position: "absolute",
-            top: 8,
+            top: 14,
             right: 8,
             color: "text.secondary",
             opacity: 0.6,
