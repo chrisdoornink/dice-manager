@@ -1,7 +1,7 @@
 export interface RollHistoryItem {
   id: string;
   dieName: string;
-  value: string | number;
+  value: string;
   timestamp: number;
 }
 

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from "react";
-import { Box, Button, Container, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Box, Button, Container, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Snackbar } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
 import HistoryIcon from '@mui/icons-material/History';
+import ShareIcon from '@mui/icons-material/Share';
+import CloseIcon from '@mui/icons-material/Close';
 import DiceItem from "./DiceItem";
 import { RollHistoryDrawer } from "./RollHistory";
 import type { RollHistoryItem } from "./RollHistory";
@@ -12,6 +14,8 @@ import { VenmoButton } from "../VenmoButton";
 import { storage } from "../../../lib/storage";
 import { StorageItems } from "../../../lib/storage/constants";
 import { useTheme } from "@/app/contexts/ThemeContext";
+import { encodePreset, decodePreset, getSharedPresetFromURL } from "@/app/utils/presetSharing";
+
 const DiceManager = () => {
   // Initialize with empty arrays to match server-side render
   const [dice, setDice] = useState<Dice[]>([]);
@@ -26,6 +30,8 @@ const DiceManager = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [rollTime, setRollTime] = useState(2000);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const { theme } = useTheme();
 
   // Load data from localStorage only after initial render
@@ -50,6 +56,18 @@ const DiceManager = () => {
     if (!isClient) return;
     storage.setItem(StorageItems.rollHistory, rollHistory);
   }, [rollHistory, isClient]);
+
+  // Check for shared preset in URL on mount
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const sharedPreset = getSharedPresetFromURL();
+    if (sharedPreset) {
+      loadPreset(sharedPreset);
+      // Clear the URL parameter after loading
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [isClient]);
 
   const addDice = () => {
     setDice([...dice, { ...DEFAULT_DICE, id: uuidv4() }]);
@@ -130,6 +148,19 @@ const DiceManager = () => {
         newSet.add(die.id);
       }
       return newSet;
+    });
+  };
+
+  const sharePreset = (preset: DicePreset) => {
+    const encoded = encodePreset(preset);
+    const url = `${window.location.origin}${window.location.pathname}?preset=${encoded}`;
+    
+    navigator.clipboard.writeText(url).then(() => {
+      setSnackbarMessage("Share link copied to clipboard!");
+      setSnackbarOpen(true);
+    }).catch(() => {
+      setSnackbarMessage("Failed to copy share link");
+      setSnackbarOpen(true);
     });
   };
 
@@ -340,30 +371,56 @@ const DiceManager = () => {
 
       <Dialog open={loadPresetOpen} onClose={() => setLoadPresetOpen(false)}>
         <DialogTitle>Load Preset</DialogTitle>
-        <DialogContent>
-          {[...DEFAULT_PRESETS, ...presets].map((preset) => (
-            <Box
-              key={preset.id}
-              sx={{
-                p: 2,
-                display: "flex",
-                alignItems: "center",
-                borderBottom: 1,
-                borderColor: "divider",
-                "&:last-child": {
-                  borderBottom: 0,
-                },
-              }}
-            >
-              <Box sx={{ flex: 1 }}>{preset.name}</Box>
-              <Button onClick={() => loadPreset(preset)}>Load</Button>
-              {!DEFAULT_PRESETS.includes(preset) && (
-                <Button onClick={() => deletePreset(preset.id)} color="error">
-                  Delete
-                </Button>
-              )}
-            </Box>
-          ))}
+        <DialogContent sx={{ minWidth: 400 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
+            {[...DEFAULT_PRESETS, ...presets].map((preset) => (
+              <Box
+                key={preset.id}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  p: 1,
+                  borderRadius: 1,
+                  backgroundColor: theme.buttonBackground,
+                  "&:hover": {
+                    backgroundColor: theme.buttonBackgroundHover,
+                  },
+                }}
+              >
+                <Box sx={{ flex: 1 }}>
+                  <Button
+                    onClick={() => loadPreset(preset)}
+                    sx={{
+                      color: theme.buttonText,
+                      textAlign: "left",
+                      textTransform: "none",
+                    }}
+                  >
+                    {preset.name}
+                  </Button>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => sharePreset(preset)}
+                    sx={{ color: theme.buttonText }}
+                  >
+                    <ShareIcon />
+                  </IconButton>
+                  {!DEFAULT_PRESETS.includes(preset) && (
+                    <IconButton
+                      size="small"
+                      onClick={() => deletePreset(preset.id)}
+                      sx={{ color: theme.buttonText }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLoadPresetOpen(false)}>Cancel</Button>
@@ -378,6 +435,23 @@ const DiceManager = () => {
       />
 
       <VenmoButton venmoUsername="chrisdoornink" />
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        action={
+          <IconButton
+            size="small"
+            color="inherit"
+            onClick={() => setSnackbarOpen(false)}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+      />
     </Container>
   );
 };
