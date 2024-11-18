@@ -203,27 +203,6 @@ const DiceManager = () => {
         </Button>
       </Box>
 
-      {/* Roll Button */}
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-        <Button
-          variant="contained"
-          onClick={rollDice}
-          disabled={dice.length === 0 || rolling}
-          sx={{
-            minWidth: 200,
-            py: 1.5,
-            px: 4,
-            fontSize: "1.1rem",
-          }}
-        >
-          {rolling
-            ? "Rolling..."
-            : lockedDice.size > 0
-            ? `Roll ${dice.length - lockedDice.size} Dice`
-            : "Roll All"}
-        </Button>
-      </Box>
-
       {/* Centered Dice Area */}
       <Box
         sx={{
@@ -267,6 +246,25 @@ const DiceManager = () => {
           pt: 4,
         }}
       >
+        {/* Roll Button */}
+        <Button
+          variant="contained"
+          onClick={rollDice}
+          disabled={dice.length === 0 || rolling}
+          sx={{
+            minWidth: 200,
+            py: 1.5,
+            px: 4,
+            fontSize: "1.1rem",
+          }}
+        >
+          {rolling
+            ? "Rolling..."
+            : lockedDice.size > 0
+            ? `Roll ${dice.length - lockedDice.size} Dice`
+            : "Roll All"}
+        </Button>
+
         {/* Roll Speed Controls */}
         <Box
           sx={{
