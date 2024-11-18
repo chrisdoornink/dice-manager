@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Dice Manager
 
-## Getting Started
+A modern, intuitive dice rolling manager for tabletop games. Built with Next.js and Material-UI.
 
-First, run the development server:
+## Features
+
+- Roll multiple dice simultaneously
+- Save and load dice presets
+- Lock specific dice values
+- View roll history
+- Mobile-friendly interface
+
+## Tech Stack
+
+- Next.js 14
+- React 18
+- TypeScript
+- Material-UI
+- Local Storage for data persistence
+
+## Development
+
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:8421](http://localhost:8421) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+To create a production build:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+To start the production server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+This project can be deployed to any platform that supports Next.js:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Vercel (Recommended)
+- Netlify
+- AWS
+- Digital Ocean
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Environment Variables
+
+No environment variables are required for basic functionality.
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

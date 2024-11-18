@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
 import { Box, Button, Container, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
@@ -9,20 +9,17 @@ import { RollHistoryDrawer } from "./RollHistory";
 import type { RollHistoryItem } from "./RollHistory";
 import { DEFAULT_DICE, DEFAULT_PRESETS, type Dice, type DicePreset } from "./constants";
 import { VenmoButton } from "../VenmoButton";
+import { storage } from "../../../lib/storage";
+import { StorageItems } from "../../../lib/storage/constants";
 
 const DiceManager = () => {
-  const [dice, setDice] = useState<Dice[]>(() => {
-    const savedDice = localStorage.getItem("currentDice");
-    return savedDice ? JSON.parse(savedDice) : [];
-  });
-
-  const [presets, setPresets] = useState<DicePreset[]>(() => {
-    const savedPresets = localStorage.getItem("dicePresets");
-    return savedPresets ? JSON.parse(savedPresets) : [];
-  });
+  // Initialize with empty arrays to match server-side render
+  const [dice, setDice] = useState<Dice[]>([]);
+  const [presets, setPresets] = useState<DicePreset[]>([]);
+  const [rollHistory, setRollHistory] = useState<RollHistoryItem[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   const [lockedDice, setLockedDice] = useState<Set<string>>(new Set());
-
   const [savePresetOpen, setSavePresetOpen] = useState(false);
   const [loadPresetOpen, setLoadPresetOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
@@ -30,22 +27,28 @@ const DiceManager = () => {
   const [rolling, setRolling] = useState(false);
   const [rollTime, setRollTime] = useState(2000);
 
-  const [rollHistory, setRollHistory] = useState<RollHistoryItem[]>(() => {
-    const savedHistory = localStorage.getItem("rollHistory");
-    return savedHistory ? JSON.parse(savedHistory) : [];
-  });
+  // Load data from localStorage only after initial render
+  useEffect(() => {
+    setIsClient(true);
+    setDice(storage.getItem(StorageItems.currentDice));
+    setPresets(storage.getItem(StorageItems.dicePresets));
+    setRollHistory(storage.getItem(StorageItems.rollHistory));
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("currentDice", JSON.stringify(dice));
-  }, [dice]);
+    if (!isClient) return;
+    storage.setItem(StorageItems.currentDice, dice);
+  }, [dice, isClient]);
 
   useEffect(() => {
-    localStorage.setItem("dicePresets", JSON.stringify(presets));
-  }, [presets]);
+    if (!isClient) return;
+    storage.setItem(StorageItems.dicePresets, presets);
+  }, [presets, isClient]);
 
   useEffect(() => {
-    localStorage.setItem("rollHistory", JSON.stringify(rollHistory));
-  }, [rollHistory]);
+    if (!isClient) return;
+    storage.setItem(StorageItems.rollHistory, rollHistory);
+  }, [rollHistory, isClient]);
 
   const addDice = () => {
     setDice([...dice, { ...DEFAULT_DICE, id: uuidv4() }]);
