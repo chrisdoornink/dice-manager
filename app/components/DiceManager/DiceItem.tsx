@@ -49,6 +49,24 @@ const DiceItem: React.FC<DiceItemProps> = ({
     return '1rem';
   };
 
+  const dieFaceStyles = {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: getFontSize(displayValue),
+    fontWeight: "bold",
+    backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
+    color: "#444444",
+    textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
+    boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
+    borderRadius: "4px",
+    backfaceVisibility: "hidden",
+    transition: "background-color 0.2s ease-in-out"
+  };
+
   const handleUpdate = (event: React.FormEvent) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
@@ -72,7 +90,7 @@ const DiceItem: React.FC<DiceItemProps> = ({
     <Box
       sx={{
         p: 2,
-        backgroundColor: selected ? "rgba(0, 0, 0, 0.04)" : "background.paper",
+        backgroundColor: "background.paper",
         borderRadius: 2,
         display: "flex",
         flexDirection: "column",
@@ -80,11 +98,13 @@ const DiceItem: React.FC<DiceItemProps> = ({
         gap: 2,
         position: "relative",
         cursor: "pointer",
-        transition: "background-color 0.2s ease-in-out",
+        transition: "all 0.2s ease-in-out",
         "&:hover": {
-          backgroundColor: selected ? "rgba(0, 0, 0, 0.04)" : "rgba(0, 0, 0, 0.02)",
           "& .hover-lock": {
             opacity: 0.2,
+          },
+          "& .die-face": {
+            backgroundColor: "#F8F8F3",
           }
         },
       }}
@@ -178,22 +198,10 @@ const DiceItem: React.FC<DiceItemProps> = ({
         >
           {/* Front face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#FFFFF5",
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
-              borderRadius: "4px",
+              ...dieFaceStyles,
               transform: "translateZ(40px)",
-              backfaceVisibility: "hidden"
             }}
           >
             {displayValue}
@@ -201,23 +209,12 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
           {/* Back face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#FFFFF5",
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
+              ...dieFaceStyles,
+              transform: "translateZ(-40px) rotateX(180deg)",
               border: "1px solid rgba(255,255,255,0.8)",
-              borderRadius: "4px",
-              transform: "translateZ(-40px) rotateY(180deg)",
-              backfaceVisibility: "hidden"
+              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
             }}
           >
             {displayValue}
@@ -225,23 +222,14 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
           {/* Right face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
+              ...dieFaceStyles,
               width: "80px",
               height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#F5F5EA", 
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              borderRadius: "4px",
               transform: "rotateY(90deg) translateZ(40px)",
-              backfaceVisibility: "hidden"
+              border: "1px solid rgba(255,255,255,0.8)",
+              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
             }}
           >
             {displayValue}
@@ -249,23 +237,14 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
           {/* Left face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
+              ...dieFaceStyles,
               width: "80px",
               height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#F5F5EA", 
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              borderRadius: "4px",
               transform: "rotateY(-90deg) translateZ(40px)",
-              backfaceVisibility: "hidden"
+              border: "1px solid rgba(255,255,255,0.8)",
+              backgroundColor: selected ? "#F5F5F0" : "#F5F5EA",
             }}
           >
             {displayValue}
@@ -273,23 +252,14 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
           {/* Top face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
+              ...dieFaceStyles,
               width: "80px",
               height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#F5F5EA", 
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              borderRadius: "4px",
               transform: "rotateX(90deg) translateZ(40px)",
-              backfaceVisibility: "hidden"
+              border: "1px solid rgba(255,255,255,0.8)",
+              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
             }}
           >
             {displayValue}
@@ -297,23 +267,14 @@ const DiceItem: React.FC<DiceItemProps> = ({
 
           {/* Bottom face */}
           <Box
+            className="die-face"
             sx={{
-              position: "absolute",
+              ...dieFaceStyles,
               width: "80px",
               height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: getFontSize(displayValue),
-              fontWeight: "bold",
-              backgroundColor: "#F5F5EA", 
-              color: "#444444",
-              textShadow: "0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.3)",
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
-              border: "1px solid rgba(255,255,255,0.8)",
-              borderRadius: "4px",
               transform: "rotateX(-90deg) translateZ(40px)",
-              backfaceVisibility: "hidden"
+              border: "1px solid rgba(255,255,255,0.8)",
+              backgroundColor: selected ? "#F5F5F0" : "#FFFFF5",
             }}
           >
             {displayValue}
