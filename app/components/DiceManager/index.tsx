@@ -401,13 +401,15 @@ const DiceManager = () => {
                   </Button>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => sharePreset(preset)}
-                    sx={{ color: theme.buttonText }}
-                  >
-                    <ShareIcon />
-                  </IconButton>
+                  {!DEFAULT_PRESETS.includes(preset) && (
+                    <IconButton
+                      size="small"
+                      onClick={() => sharePreset(preset)}
+                      sx={{ color: theme.buttonText }}
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  )}
                   {!DEFAULT_PRESETS.includes(preset) && (
                     <IconButton
                       size="small"
