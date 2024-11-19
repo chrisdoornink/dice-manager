@@ -48,6 +48,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const theme = isDarkMode ? darkTheme : lightTheme;
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--background-color', theme.background);
+  }, [theme.background]);
+
   return (
     <ThemeContext.Provider value={{ theme, isDarkMode, toggleTheme }}>
       {children}
