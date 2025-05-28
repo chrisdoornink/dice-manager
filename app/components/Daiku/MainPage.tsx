@@ -3,14 +3,42 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Container, Box, Fade } from "@mui/material";
 
-// Define a type for our grid positions
-type GridPosition = { row: number; col: number };
+// Define a type for our grid positions using axial coordinates
+// q: column axis, r: diagonal axis
+type GridPosition = { q: number; r: number };
 
 const MainPage = () => {
   // CONFIGURABLE GRID PARAMETERS
-  const GRID_ROWS = 5; // Total rows in the grid (must be odd to have a center)
-  const GRID_COLS = 5; // Total columns in the grid (must be odd to have a center)
-  const ANIMATION_DELAY = 100; // Milliseconds between adding each hexagon
+  const GRID_SIZE = 4; // This determines the radius of the hexagonal grid (number of rings around center)
+  const ANIMATION_DELAY = 80; // Milliseconds between adding each hexagon
+  
+  // Helper function to determine if two hexagons are adjacent
+  const areHexagonsAdjacent = (a: GridPosition, b: GridPosition): boolean => {
+    // In axial coordinates, two hexagons are adjacent if:
+    // They differ by exactly 1 in one coordinate and 0 in the other, OR
+    // They differ by exactly 1 in both coordinates, but in opposite directions
+    const dq = Math.abs(a.q - b.q);
+    const dr = Math.abs(a.r - b.r);
+    const dqr = Math.abs((a.q + a.r) - (b.q + b.r));
+    
+    // Two hexagons are adjacent if the sum of differences is exactly 1 or 2 in a specific way
+    return (dq + dr + dqr) === 2;
+  };
+  
+  // Example of getting all neighbors for a given hexagon
+  const getNeighbors = (pos: GridPosition): GridPosition[] => {
+    // The six directions to adjacent hexagons in axial coordinates
+    const directions = [
+      { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
+      { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 }
+    ];
+    
+    return directions.map(dir => ({
+      q: pos.q + dir.q,
+      r: pos.r + dir.r
+    }));
+  };
+  // (moved up to the config section)
 
   // Hexagon size configuration
   const hexSize = 60; // Base size of the hexagon
@@ -27,34 +55,42 @@ const MainPage = () => {
   const verticalSpacing = hexHeight; // Centers are exactly the height apart vertically
 
   // Track which hexagons are currently visible
-  const [visibleHexagons, setVisibleHexagons] = useState<GridPosition[]>([{ row: 0, col: 0 }]);
+  // Start with the origin (0,0) in axial coordinates
+  const [visibleHexagons, setVisibleHexagons] = useState<GridPosition[]>([{ q: 0, r: 0 }]);
+  
+  // Track the currently hovered hexagon
+  const [hoveredHexagon, setHoveredHexagon] = useState<GridPosition | null>(null);
+  
+  // Track which hexagons are highlighted as neighbors
+  const [highlightedNeighbors, setHighlightedNeighbors] = useState<GridPosition[]>([]);
 
-  // Generate all positions in the grid
+  // Generate all positions in the grid using axial coordinates
   const allGridPositions = useMemo(() => {
     const positions: GridPosition[] = [];
-    const centerRow = Math.floor(GRID_ROWS / 2);
-    const centerCol = Math.floor(GRID_COLS / 2);
-
-    for (let row = 0; row < GRID_ROWS; row++) {
-      for (let col = 0; col < GRID_COLS; col++) {
-        positions.push({
-          row: row - centerRow,
-          col: col - centerCol,
-        });
+    const radius = GRID_SIZE; // Radius determines how many rings around center
+    
+    // Generate a hexagonal grid with axial coordinates
+    // For a radius of 2, this creates a grid with center and two rings around it
+    for (let q = -radius; q <= radius; q++) {
+      const r1 = Math.max(-radius, -q - radius);
+      const r2 = Math.min(radius, -q + radius);
+      for (let r = r1; r <= r2; r++) {
+        positions.push({ q, r });
       }
     }
 
-    // Sort positions by distance from center for animation purposes
+    // Sort positions by distance from center (0,0) for animation purposes
     return positions.sort((a, b) => {
-      const distA = Math.abs(a.row) + Math.abs(a.col);
-      const distB = Math.abs(b.row) + Math.abs(b.col);
+      // In axial coordinates, distance from origin is calculated with Manhattan distance formula
+      const distA = (Math.abs(a.q) + Math.abs(a.r) + Math.abs(a.q + a.r)) / 2;
+      const distB = (Math.abs(b.q) + Math.abs(b.r) + Math.abs(b.q + b.r)) / 2;
       return distA - distB;
     });
-  }, [GRID_ROWS, GRID_COLS]);
+  }, [GRID_SIZE]);
 
   // Remove the center position as it's already visible
   const hexagonSequence = useMemo(() => {
-    return allGridPositions.filter((pos) => !(pos.row === 0 && pos.col === 0));
+    return allGridPositions.filter((pos) => !(pos.q === 0 && pos.r === 0));
   }, [allGridPositions]);
 
   // Add new hexagons after delay, one by one
@@ -120,23 +156,33 @@ const MainPage = () => {
       >
         {/* Render all visible hexagons */}
         {visibleHexagons.map((position, index) => {
-          // For a honeycomb pattern with flat-topped hexagons:
-          // Even-numbered rows are aligned
-          // Odd-numbered rows are offset by 3/4 of the hex width to create perfect touching
-          const rowOffset = position.row % 2 === 0 ? 0 : hexWidth * 0.75;
-          const xPosition = position.col * (hexWidth * 1.5) + rowOffset;
-          const yPosition = position.row * (hexHeight / 2);
+          // Convert axial coordinates to pixel coordinates for flat-topped hexagons
+          // Formula for flat-top hexagons in axial coordinates:
+          const xPosition = hexSize * (3/2 * position.q);
+          const yPosition = hexSize * (Math.sqrt(3)/2 * position.q + Math.sqrt(3) * position.r);
+          
+          // Invert y-position to make positive r go upward
+          const yPositionInverted = -yPosition;
 
           return (
-            <Fade key={`${position.row}-${position.col}`} in={true} timeout={1000}>
+            <Fade key={`${position.q}-${position.r}`} in={true} timeout={1000}>
               <Box
                 sx={{
                   position: "absolute",
                   left: `calc(50% + ${xPosition}px)`,
-                  top: `calc(50% + ${yPosition}px)`,
+                  top: `calc(50% + ${yPositionInverted}px)`,
                   transform: "translate(-50%, -50%)",
+                  cursor: "pointer",
                   // Debug border to see the box boundaries
                   // border: '1px dashed blue'
+                }}
+                onMouseEnter={() => {
+                  setHoveredHexagon(position);
+                  setHighlightedNeighbors(getNeighbors(position));
+                }}
+                onMouseLeave={() => {
+                  setHoveredHexagon(null);
+                  setHighlightedNeighbors([]);
                 }}
               >
                 <svg
@@ -145,7 +191,29 @@ const MainPage = () => {
                   viewBox="0 0 100 100"
                   style={{ display: "block" }} // Remove any default spacing
                 >
-                  <polygon points={hexagonPoints} fill="white" stroke="black" strokeWidth="2" />
+                  <polygon 
+                    points={hexagonPoints} 
+                    fill={
+                      hoveredHexagon && hoveredHexagon.q === position.q && hoveredHexagon.r === position.r 
+                        ? "#ffcc80" // Orange for hovered hexagon
+                        : highlightedNeighbors.some(n => n.q === position.q && n.r === position.r)
+                          ? "#80cbc4" // Teal for adjacent hexagons
+                          : "white" // Default color
+                    } 
+                    stroke="black" 
+                    strokeWidth="2" 
+                  />
+                  <text
+                    x="50"
+                    y="50"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="black"
+                    fontSize="12"
+                    fontWeight="bold"
+                  >
+                    {`${position.q},${position.r}`}
+                  </text>
                 </svg>
               </Box>
             </Fade>
