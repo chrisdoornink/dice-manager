@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
-import DiceManager from "./components/DiceManager";
+import Daiku from "./components/Daiku";
 
 export default function Home() {
-  return <DiceManager />;
+  return <Daiku />;
 }
