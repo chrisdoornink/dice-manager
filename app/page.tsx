@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
-import Daiku from "./components/Daiku";
+import DaikuContainer from "./components/Daiku/DaikuContainer";
 
 export default function Home() {
-  return <Daiku />;
+  return <DaikuContainer />;
 }
