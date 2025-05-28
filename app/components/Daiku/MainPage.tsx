@@ -48,7 +48,7 @@ const MainPage = () => {
   };
 
   // Example of getting all neighbors for a given hexagon
-  const getNeighbors = (pos: GridPosition): GridPosition[] => {
+  const getNeighbors = useCallback((pos: GridPosition): GridPosition[] => {
     // The six directions to adjacent hexagons in axial coordinates
     const directions = [
       { q: 1, r: 0 },
@@ -63,7 +63,7 @@ const MainPage = () => {
       q: pos.q + dir.q,
       r: pos.r + dir.r,
     }));
-  };
+  }, []);
   // (moved up to the config section)
 
   // Responsive sizing - calculate hexagon size based on screen dimensions
@@ -138,18 +138,132 @@ const MainPage = () => {
     water: { type: 'water' as TerrainType, color: '#5DA9E9' },
   }), []);
   
-  // Helper function to get a random terrain type
-  const getRandomTerrain = useCallback(() => {
-    const types = Object.values(terrainTypes);
-    const randomIndex = Math.floor(Math.random() * types.length);
-    return types[randomIndex];
-  }, [terrainTypes]);
+  // Pre-generate a terrain map to ensure connectivity
+  const [terrainMap, setTerrainMap] = useState<Map<string, TerrainDefinition>>(new Map());
+  
+  // Helper function to get a random terrain type with probabilities
+  const getRandomTerrain = useCallback((position: GridPosition, existingTerrain: Map<string, TerrainDefinition>) => {
+    const posKey = `${position.q},${position.r}`;
+    
+    // Check if terrain is already assigned
+    if (existingTerrain.has(posKey)) {
+      return existingTerrain.get(posKey)!;
+    }
+    
+    // Get neighboring cells
+    const neighbors = getNeighbors(position);
+    const neighborTerrains: TerrainDefinition[] = [];
+    
+    // Check what terrain the neighbors have
+    for (const neighbor of neighbors) {
+      const neighborKey = `${neighbor.q},${neighbor.r}`;
+      if (existingTerrain.has(neighborKey)) {
+        neighborTerrains.push(existingTerrain.get(neighborKey)!);
+      }
+    }
+    
+    // If this is an edge tile, reduce the chance of water
+    const isEdgeTile = position.q === GRID_BOUNDS.qMin || 
+                       position.q === GRID_BOUNDS.qMax || 
+                       position.r === GRID_BOUNDS.rMin || 
+                       position.r === GRID_BOUNDS.rMax;
+    
+    // Calculate probabilities based on location and neighbors
+    let waterProbability = 0.25; // Base water probability
+    let mountainProbability = 0.2;
+    let forestProbability = 0.3;
+    let grassProbability = 0.25;
+    
+    // Edge tiles have much lower water probability to avoid isolation
+    if (isEdgeTile) {
+      waterProbability = 0.05;
+      grassProbability = 0.5;
+    }
+    
+    // If neighbors include water, reduce chance of more water to avoid isolation
+    const waterNeighbors = neighborTerrains.filter(t => t.type === 'water').length;
+    if (waterNeighbors > 0) {
+      // Reduce water probability based on how many water neighbors exist
+      waterProbability = Math.max(0.05, waterProbability - (waterNeighbors * 0.08));
+      grassProbability += waterNeighbors * 0.05;
+    }
+    
+    // If neighbors include mountains, slightly increase chance of more mountains
+    const mountainNeighbors = neighborTerrains.filter(t => t.type === 'mountain').length;
+    if (mountainNeighbors > 0) {
+      mountainProbability += mountainNeighbors * 0.05;
+    }
+    
+    // If neighbors include forest, slightly increase chance of more forest
+    const forestNeighbors = neighborTerrains.filter(t => t.type === 'forest').length;
+    if (forestNeighbors > 0) {
+      forestProbability += forestNeighbors * 0.05;
+    }
+    
+    // Normalize probabilities
+    const totalProb = waterProbability + mountainProbability + forestProbability + grassProbability;
+    waterProbability /= totalProb;
+    mountainProbability /= totalProb;
+    forestProbability /= totalProb;
+    grassProbability /= totalProb;
+    
+    // Choose terrain based on calculated probabilities
+    const random = Math.random();
+    let terrain;
+    
+    if (random < waterProbability) {
+      terrain = terrainTypes.water;
+    } else if (random < waterProbability + mountainProbability) {
+      terrain = terrainTypes.mountain;
+    } else if (random < waterProbability + mountainProbability + forestProbability) {
+      terrain = terrainTypes.forest;
+    } else {
+      terrain = terrainTypes.grass;
+    }
+    
+    // Store the terrain
+    existingTerrain.set(posKey, terrain);
+    return terrain;
+  }, [terrainTypes, getNeighbors, GRID_BOUNDS]);
+  
+  // Generate initial terrain map
+  const generateTerrainMap = useCallback((positions: GridPosition[]) => {
+    const newMap = new Map<string, TerrainDefinition>();
+    
+    // For the center tile, randomly choose any non-water terrain
+    const centerTerrainOptions = [
+      terrainTypes.grass,
+      terrainTypes.forest,
+      terrainTypes.mountain
+    ];
+    const randomCenterTerrain = centerTerrainOptions[Math.floor(Math.random() * centerTerrainOptions.length)];
+    newMap.set('0,0', randomCenterTerrain);
+    
+    // First generate terrain for all non-edge tiles
+    for (const pos of positions.filter(p => 
+      !(p.q === 0 && p.r === 0) && // Skip center (already set)
+      p.q !== GRID_BOUNDS.qMin && 
+      p.q !== GRID_BOUNDS.qMax && 
+      p.r !== GRID_BOUNDS.rMin && 
+      p.r !== GRID_BOUNDS.rMax)) {
+      getRandomTerrain(pos, newMap);
+    }
+    
+    // Then handle edge tiles to ensure connectivity
+    for (const pos of positions.filter(p => 
+      p.q === GRID_BOUNDS.qMin || 
+      p.q === GRID_BOUNDS.qMax || 
+      p.r === GRID_BOUNDS.rMin || 
+      p.r === GRID_BOUNDS.rMax)) {
+      getRandomTerrain(pos, newMap);
+    }
+    
+    return newMap;
+  }, [terrainTypes, getRandomTerrain, GRID_BOUNDS]);
   
   // Track which hexagons are currently visible with their terrain
-  // Start with the origin (0,0) in axial coordinates
-  const [visibleHexagons, setVisibleHexagons] = useState<HexagonData[]>([
-    { q: 0, r: 0, terrain: terrainTypes.grass }
-  ]);
+  // Start with the origin (0,0) in axial coordinates, terrain will be set later
+  const [visibleHexagons, setVisibleHexagons] = useState<HexagonData[]>([]);
 
   // Track the currently hovered hexagon
   const [hoveredHexagon, setHoveredHexagon] = useState<GridPosition | null>(null);
@@ -245,6 +359,20 @@ const MainPage = () => {
   const hexagonSequence = useMemo(() => {
     return allGridPositions.filter((pos) => !(pos.q === 0 && pos.r === 0));
   }, [allGridPositions]);
+  
+  // Generate terrain map when grid positions are ready
+  useEffect(() => {
+    if (allGridPositions.length > 0) {
+      const newTerrainMap = generateTerrainMap(allGridPositions);
+      setTerrainMap(newTerrainMap);
+      
+      // Set the initial center hexagon with its terrain
+      const centerTerrain = newTerrainMap.get('0,0')!;
+      setVisibleHexagons([
+        { q: 0, r: 0, terrain: centerTerrain }
+      ]);
+    }
+  }, [allGridPositions, generateTerrainMap]);
 
   // Add new hexagons after delay, one by one
   useEffect(() => {
@@ -253,9 +381,15 @@ const MainPage = () => {
       if (index >= hexagonSequence.length) return;
 
       const timer = setTimeout(() => {
+        // Get the hexagon position
+        const hexPosition = hexagonSequence[index];
+        // Get its pre-generated terrain
+        const posKey = `${hexPosition.q},${hexPosition.r}`;
+        const hexTerrain = terrainMap.get(posKey) || terrainTypes.grass;
+        
         setVisibleHexagons((prev) => [
           ...prev, 
-          { ...hexagonSequence[index], terrain: getRandomTerrain() }
+          { ...hexPosition, terrain: hexTerrain }
         ]);
         // Schedule the next hexagon
         addNextHexagon(index + 1);
@@ -270,7 +404,7 @@ const MainPage = () => {
     }, 1000);
 
     return () => clearTimeout(initialTimer);
-  }, [hexagonSequence, ANIMATION_DELAY, getRandomTerrain]);
+  }, [hexagonSequence, ANIMATION_DELAY, getRandomTerrain, terrainMap, terrainTypes.grass]);
 
   // Calculate the total grid dimensions based on all visible hexagons
   const gridDimensions = useMemo(() => {
