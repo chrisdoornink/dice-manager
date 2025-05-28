@@ -10,7 +10,7 @@ import { generateHexPoints } from "./utils/hexMath";
 import { useHexagonAnimation } from "./hooks/useHexagonAnimation";
 import { ANIMATION_DELAY, TERRAIN_TYPES } from "./utils/generateTerrainMap";
 import { generateTerrainMap } from "./utils/generateTerrainMap";
-import { entityTypes } from "./utils/entityTypes";
+import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
 import { useHexagonalGrid } from "./hooks/useHexagonalGrid";
 import { useHexagonSize } from "./hooks/useHexagonSize";
 
@@ -89,25 +89,25 @@ const MainPage = () => {
       const shuffledPositions = [...potentialStartPositions].sort(() => Math.random() - 0.5);
 
       // Create the entities at the shuffled positions
-      const newEntities: PlayerEntity[] = [
+      const newPlayerEntities: PlayerEntity[] = [
         {
           id: "archer-1",
           position: shuffledPositions[0],
-          entityType: entityTypes.archer,
+          entityType: playerUnitTypes.archer,
         },
         {
           id: "cavalry-1",
           position: shuffledPositions[1],
-          entityType: entityTypes.cavalry,
+          entityType: playerUnitTypes.cavalry,
         },
         {
           id: "infantry-1",
           position: shuffledPositions[2],
-          entityType: entityTypes.infantry,
+          entityType: playerUnitTypes.infantry,
         },
       ];
 
-      setPlayerEntities(newEntities);
+      setPlayerEntities(newPlayerEntities);
 
       // No need to initialize visible hexagons here - now handled by useHexagonAnimation hook
     }
