@@ -46,8 +46,58 @@ const MainPage = () => {
   };
   // (moved up to the config section)
 
-  // Hexagon size configuration
-  const hexSize = 60; // Base size of the hexagon
+  // Responsive sizing - calculate hexagon size based on screen dimensions
+  const [windowDimensions, setWindowDimensions] = useState<{width: number, height: number}>({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800
+  });
+  
+  // Update window dimensions when resized
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Call handler right away to get initial size
+    handleResize();
+    
+    // Remove event listener on cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Calculate optimal hexagon size based on window dimensions and grid bounds
+  const hexSize = useMemo(() => {
+    // Estimate the grid dimensions in logical units
+    const logicalWidth = GRID_BOUNDS.qMax - GRID_BOUNDS.qMin + 1;
+    const logicalHeight = GRID_BOUNDS.rMax - GRID_BOUNDS.rMin + 1;
+    
+    // Apply safety margins for container padding
+    const safetyFactor = 0.85; // Use 85% of the available space
+    // Account for mobile vs desktop - use more aggressive scaling on smaller screens
+    const isMobile = windowDimensions.width < 768;
+    const mobileFactor = isMobile ? 0.95 : 0.85;
+    const availableWidth = windowDimensions.width * mobileFactor;
+    const availableHeight = windowDimensions.height * mobileFactor;
+    
+    // Calculate size constraints based on logical dimensions
+    // For horizontal constraint: we need 1.5*q hexagons to fit in width (due to overlapping)
+    // For vertical constraint: we need sqrt(3)*r hexagons to fit in height
+    const widthConstraint = availableWidth / (logicalWidth * 1.5);
+    const heightConstraint = availableHeight / (logicalHeight * Math.sqrt(3));
+    
+    // Choose the smaller of the two constraints
+    const baseSize = Math.min(widthConstraint, heightConstraint);
+    
+    // Apply a minimum size to ensure hexagons aren't too small
+    // And a maximum size to ensure they don't get too large on big screens
+    return Math.min(Math.max(baseSize, 20), 60);
+  }, [windowDimensions, GRID_BOUNDS]);
 
   // Calculate the dimensions of a hexagon based on size
   // For a regular hexagon with flat tops:
@@ -175,6 +225,46 @@ const MainPage = () => {
     return () => clearTimeout(initialTimer);
   }, [hexagonSequence, ANIMATION_DELAY]);
 
+  // Calculate the total grid dimensions based on all visible hexagons
+  const gridDimensions = useMemo(() => {
+    if (visibleHexagons.length === 0) return { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    
+    // Convert all hexagon positions to pixel coordinates
+    const pixelPositions = visibleHexagons.map(position => {
+      const xPosition = hexSize * (3/2 * position.q);
+      const yPosition = hexSize * (Math.sqrt(3)/2 * position.q + Math.sqrt(3) * position.r);
+      const yPositionInverted = -yPosition;
+      
+      return {
+        x: xPosition,
+        y: yPositionInverted
+      };
+    });
+    
+    // Find min and max coordinates
+    const minX = Math.min(...pixelPositions.map(p => p.x)) - hexWidth/2;
+    const maxX = Math.max(...pixelPositions.map(p => p.x)) + hexWidth/2;
+    const minY = Math.min(...pixelPositions.map(p => p.y)) - hexHeight/2;
+    const maxY = Math.max(...pixelPositions.map(p => p.y)) + hexHeight/2;
+    
+    return {
+      width: maxX - minX,
+      height: maxY - minY,
+      minX,
+      maxX,
+      minY,
+      maxY
+    };
+  }, [visibleHexagons, hexSize, hexWidth, hexHeight]);
+  
+  // Log dimensions when all hexagons are visible
+  useEffect(() => {
+    if (visibleHexagons.length === allGridPositions.length) {
+      console.log('Grid dimensions:', gridDimensions);
+      console.log('Total hexagons:', visibleHexagons.length);
+    }
+  }, [visibleHexagons.length, allGridPositions.length, gridDimensions]);
+  
   // Function to generate exact SVG points for a hexagon
   const generateHexPoints = () => {
     const points = [];
@@ -207,7 +297,8 @@ const MainPage = () => {
         sx={{
           position: "relative",
           width: "100%",
-          height: "70vh",
+          height: "100vh",
+          maxHeight: "100vh",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -262,17 +353,36 @@ const MainPage = () => {
                     stroke="black" 
                     strokeWidth="2" 
                   />
+                  {/* Coordinate text - scales with hexagon size */}
                   <text
                     x="50"
-                    y="50"
+                    y="30"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="black"
-                    fontSize="12"
+                    fontSize={Math.max(hexSize / 5, 8)}
                     fontWeight="bold"
                   >
                     {`${position.q},${position.r}`}
                   </text>
+                  
+                  {/* Example of additional content that scales with the hexagon */}
+                  <g transform={`scale(${hexSize / 60})`} style={{ transformOrigin: '50px 60px' }}>
+                    {/* This group will scale all contained elements based on hexagon size */}
+                    {/* A simple icon example - this will scale up/down with the hexagon */}
+                    <circle cx="50" cy="60" r="15" fill="#f0f0f0" stroke="#888" strokeWidth="1" />
+                    <text
+                      x="50"
+                      y="60"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill="#555"
+                      fontSize="10"
+                      fontWeight="normal"
+                    >
+                      {position.q + position.r === 0 ? '⬦' : ''}
+                    </text>
+                  </g>
                 </svg>
               </Box>
             </Fade>
