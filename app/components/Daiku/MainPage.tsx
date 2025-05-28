@@ -1,47 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Container, Box, Fade, Typography } from "@mui/material";
-import {
-  GridPosition,
-  HexagonData,
-  TerrainDefinition,
-  EntityType,
-  PlayerEntity,
-  TerrainType,
-} from "./utils/types";
+import React, { useState, useEffect } from "react";
+import { Container, Box, Fade } from "@mui/material";
+import { GridPosition, TerrainDefinition, PlayerEntity } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
-import { calculateGridDimensions, generateHexPoints } from "./utils/hexMath";
+import { generateHexPoints } from "./utils/hexMath";
+import { useHexagonAnimation } from "./hooks/useHexagonAnimation";
+import { ANIMATION_DELAY, TERRAIN_TYPES } from "./utils/generateTerrainMap";
+import { generateTerrainMap } from "./utils/generateTerrainMap";
+import { entityTypes } from "./utils/entityTypes";
+import { useHexagonalGrid } from "./hooks/useHexagonalGrid";
+import { useHexagonSize } from "./hooks/useHexagonSize";
 
 const MainPage = () => {
-  // CONFIGURABLE GRID PARAMETERS
-  // Boundary coordinates for rectangular grid using useMemo to prevent recreating on each render
-  const GRID_BOUNDS = useMemo(
-    () => ({
-      qMin: -3, // Leftmost column
-      qMax: 3, // Rightmost column
-      rMin: -2, // Bottom row at leftmost edge [-3,-2]
-      rMax: 6, // Top row
-    }),
-    []
-  );
-  const ANIMATION_DELAY = 80; // Milliseconds between adding each hexagon
-
-  // Helper function to determine if two hexagons are adjacent
-  const areHexagonsAdjacent = (a: GridPosition, b: GridPosition): boolean => {
-    // In axial coordinates, two hexagons are adjacent if:
-    // They differ by exactly 1 in one coordinate and 0 in the other, OR
-    // They differ by exactly 1 in both coordinates, but in opposite directions
-    const dq = Math.abs(a.q - b.q);
-    const dr = Math.abs(a.r - b.r);
-    const dqr = Math.abs(a.q + a.r - (b.q + b.r));
-
-    // Two hexagons are adjacent if the sum of differences is exactly 1 or 2 in a specific way
-    return dq + dr + dqr === 2;
-  };
-
   // Responsive sizing - calculate hexagon size based on screen dimensions
   const [windowDimensions, setWindowDimensions] = useState<{ width: number; height: number }>({
     width: typeof window !== "undefined" ? window.innerWidth : 1200,
@@ -67,197 +40,18 @@ const MainPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Calculate optimal hexagon size based on window dimensions and grid bounds
-  const hexSize = useMemo(() => {
-    // Estimate the grid dimensions in logical units
-    const logicalWidth = GRID_BOUNDS.qMax - GRID_BOUNDS.qMin + 1;
-    const logicalHeight = GRID_BOUNDS.rMax - GRID_BOUNDS.rMin + 1;
-
-    // Apply safety margins for container padding
-    const safetyFactor = 0.85; // Use 85% of the available space
-    // Account for mobile vs desktop - use more aggressive scaling on smaller screens
-    const isMobile = windowDimensions.width < 768;
-    const mobileFactor = isMobile ? 0.95 : 0.85;
-    const availableWidth = windowDimensions.width * mobileFactor;
-    const availableHeight = windowDimensions.height * mobileFactor;
-
-    // Calculate size constraints based on logical dimensions
-    // For horizontal constraint: we need 1.5*q hexagons to fit in width (due to overlapping)
-    // For vertical constraint: we need sqrt(3)*r hexagons to fit in height
-    const widthConstraint = availableWidth / (logicalWidth * 1.5);
-    const heightConstraint = availableHeight / (logicalHeight * Math.sqrt(3));
-
-    // Choose the smaller of the two constraints
-    const baseSize = Math.min(widthConstraint, heightConstraint);
-
-    // Apply a minimum size to ensure hexagons aren't too small
-    // And a maximum size to ensure they don't get too large on big screens
-    return Math.min(Math.max(baseSize, 20), 60);
-  }, [windowDimensions, GRID_BOUNDS]);
-
-  // Calculate the dimensions of a hexagon based on size
-  // For a regular hexagon with flat tops:
-  const hexWidth = 2 * hexSize; // Width = 2 × radius
-  const hexHeight = Math.sqrt(3) * hexSize; // Height = √3 × radius
-
-  // Calculate the proper spacing to make borders touch
-  // For horizontally adjacent hexagons in same row
-  const horizontalSpacing = 1.5 * hexSize; // Centers are 1.5 × radius apart horizontally
-  // For vertically adjacent hexagons
-  const verticalSpacing = hexHeight; // Centers are exactly the height apart vertically
-
-  // Define terrain types and their colors
-  const terrainTypes = useMemo(
-    () => ({
-      grass: { type: "grass" as TerrainType, color: "#7EC850" },
-      mountain: { type: "mountain" as TerrainType, color: "#A0A0A0" },
-      forest: { type: "forest" as TerrainType, color: "#2D8659" },
-      water: { type: "water" as TerrainType, color: "#5DA9E9" },
-    }),
-    []
-  );
+  const [hexSize, hexWidth, hexHeight] = useHexagonSize({
+    windowDimensions,
+  });
 
   // Pre-generate a terrain map to ensure connectivity
   const [terrainMap, setTerrainMap] = useState<Map<string, TerrainDefinition>>(new Map());
 
-  // Helper function to get a random terrain type with probabilities
-  const getRandomTerrain = useCallback(
-    (position: GridPosition, existingTerrain: Map<string, TerrainDefinition>) => {
-      const posKey = `${position.q},${position.r}`;
-
-      // Check if terrain is already assigned
-      if (existingTerrain.has(posKey)) {
-        return existingTerrain.get(posKey)!;
-      }
-
-      // Get neighboring cells
-      const neighbors = getNeighboringTiles(position);
-      const neighborTerrains: TerrainDefinition[] = [];
-
-      // Check what terrain the neighbors have
-      for (const neighbor of neighbors) {
-        const neighborKey = `${neighbor.q},${neighbor.r}`;
-        if (existingTerrain.has(neighborKey)) {
-          neighborTerrains.push(existingTerrain.get(neighborKey)!);
-        }
-      }
-
-      // If this is an edge tile, reduce the chance of water
-      const isEdgeTile =
-        position.q === GRID_BOUNDS.qMin ||
-        position.q === GRID_BOUNDS.qMax ||
-        position.r === GRID_BOUNDS.rMin ||
-        position.r === GRID_BOUNDS.rMax;
-
-      // Calculate probabilities based on location and neighbors
-      let waterProbability = 0.25; // Base water probability
-      let mountainProbability = 0.2;
-      let forestProbability = 0.3;
-      let grassProbability = 0.25;
-
-      // Edge tiles have much lower water probability to avoid isolation
-      if (isEdgeTile) {
-        waterProbability = 0.05;
-        grassProbability = 0.5;
-      }
-
-      // If neighbors include water, reduce chance of more water to avoid isolation
-      const waterNeighbors = neighborTerrains.filter((t) => t.type === "water").length;
-      if (waterNeighbors > 0) {
-        // Reduce water probability based on how many water neighbors exist
-        waterProbability = Math.max(0.05, waterProbability - waterNeighbors * 0.08);
-        grassProbability += waterNeighbors * 0.05;
-      }
-
-      // If neighbors include mountains, slightly increase chance of more mountains
-      const mountainNeighbors = neighborTerrains.filter((t) => t.type === "mountain").length;
-      if (mountainNeighbors > 0) {
-        mountainProbability += mountainNeighbors * 0.05;
-      }
-
-      // If neighbors include forest, slightly increase chance of more forest
-      const forestNeighbors = neighborTerrains.filter((t) => t.type === "forest").length;
-      if (forestNeighbors > 0) {
-        forestProbability += forestNeighbors * 0.05;
-      }
-
-      // Normalize probabilities
-      const totalProb =
-        waterProbability + mountainProbability + forestProbability + grassProbability;
-      waterProbability /= totalProb;
-      mountainProbability /= totalProb;
-      forestProbability /= totalProb;
-      grassProbability /= totalProb;
-
-      // Choose terrain based on calculated probabilities
-      const random = Math.random();
-      let terrain;
-
-      if (random < waterProbability) {
-        terrain = terrainTypes.water;
-      } else if (random < waterProbability + mountainProbability) {
-        terrain = terrainTypes.mountain;
-      } else if (random < waterProbability + mountainProbability + forestProbability) {
-        terrain = terrainTypes.forest;
-      } else {
-        terrain = terrainTypes.grass;
-      }
-
-      // Store the terrain
-      existingTerrain.set(posKey, terrain);
-      return terrain;
-    },
-    [terrainTypes, GRID_BOUNDS]
-  );
-
-  // Generate initial terrain map
-  const generateTerrainMap = useCallback(
-    (positions: GridPosition[]) => {
-      const newMap = new Map<string, TerrainDefinition>();
-
-      // For the center tile, randomly choose any non-water terrain
-      const centerTerrainOptions = [terrainTypes.grass, terrainTypes.forest, terrainTypes.mountain];
-      const randomCenterTerrain =
-        centerTerrainOptions[Math.floor(Math.random() * centerTerrainOptions.length)];
-      newMap.set("0,0", randomCenterTerrain);
-
-      // First generate terrain for all non-edge tiles
-      for (const pos of positions.filter(
-        (p) =>
-          !(p.q === 0 && p.r === 0) && // Skip center (already set)
-          p.q !== GRID_BOUNDS.qMin &&
-          p.q !== GRID_BOUNDS.qMax &&
-          p.r !== GRID_BOUNDS.rMin &&
-          p.r !== GRID_BOUNDS.rMax
-      )) {
-        getRandomTerrain(pos, newMap);
-      }
-
-      // Then handle edge tiles to ensure connectivity
-      for (const pos of positions.filter(
-        (p) =>
-          p.q === GRID_BOUNDS.qMin ||
-          p.q === GRID_BOUNDS.qMax ||
-          p.r === GRID_BOUNDS.rMin ||
-          p.r === GRID_BOUNDS.rMax
-      )) {
-        getRandomTerrain(pos, newMap);
-      }
-
-      return newMap;
-    },
-    [terrainTypes, getRandomTerrain, GRID_BOUNDS]
-  );
-
-  // Track which hexagons are currently visible with their terrain
-  // Start with the origin (0,0) in axial coordinates, terrain will be set later
-  const [visibleHexagons, setVisibleHexagons] = useState<HexagonData[]>([]);
+  // Track which hexagons are highlighted as neighbors
+  const [highlightedNeighbors, setHighlightedNeighbors] = useState<GridPosition[]>([]);
 
   // Track the currently hovered hexagon
   const [hoveredHexagon, setHoveredHexagon] = useState<GridPosition | null>(null);
-
-  // Track which hexagons are highlighted as neighbors
-  const [highlightedNeighbors, setHighlightedNeighbors] = useState<GridPosition[]>([]);
 
   // Track selected entity for movement range display
   const [selectedEntity, setSelectedEntity] = useState<PlayerEntity | null>(null);
@@ -266,129 +60,7 @@ const MainPage = () => {
   const [movementRangeHexagons, setMovementRangeHexagons] = useState<GridPosition[]>([]);
 
   // Generate all positions in the grid using axial coordinates
-  const allGridPositions = useMemo(() => {
-    const positions: GridPosition[] = [];
-
-    // List of hexagons to exclude (explicitly not visible)
-    const excludedHexagons = [
-      { q: -2, r: -3 },
-      { q: -1, r: -4 },
-      { q: 0, r: -4 },
-      { q: 1, r: -5 },
-      { q: 2, r: -5 },
-      { q: 2, r: -6 },
-      { q: 3, r: -6 },
-    ];
-
-    // List of hexagons to force include (even if outside calculated boundaries)
-    const includedHexagons = [
-      { q: -1, r: 5 },
-      { q: 0, r: 4 },
-      { q: 1, r: 4 },
-    ];
-
-    // Helper function to check if a position should be excluded
-    const isExcluded = (pos: GridPosition): boolean => {
-      return excludedHexagons.some((h) => h.q === pos.q && h.r === pos.r);
-    };
-
-    // Helper function to check if a position should be forcibly included
-    const isForcedInclusion = (pos: GridPosition): boolean => {
-      return includedHexagons.some((h) => h.q === pos.q && h.r === pos.r);
-    };
-
-    // Generate a rectangular grid with the specified boundaries
-    for (let q = GRID_BOUNDS.qMin; q <= GRID_BOUNDS.qMax; q++) {
-      // Calculate the r range based on q to create the rectangular shape
-      // For mobile, we want it taller in the vertical direction
-      // Adjust r boundaries based on q position to create the specified shape
-      let rMin = GRID_BOUNDS.rMin;
-      let rMax = GRID_BOUNDS.rMax;
-
-      // Apply constraints for the diagonal edge (top-right and bottom-right)
-      // This creates the specified corner points: [-3,6], [3,3], [-3,-2], [3,-6]
-      if (q > GRID_BOUNDS.qMin) {
-        // Adjust top boundary (decreases as q increases)
-        rMax = Math.max(GRID_BOUNDS.rMax - (q - GRID_BOUNDS.qMin), 3);
-
-        // Adjust bottom boundary based on q to create the proper diagonal
-        // From [-3,-2] to [3,-6] we need to decrease by 2/3 units per q step
-        // For each q unit increase, r decreases by 4/6 units
-        const bottomSlope = 4 / 6; // How much r decreases per q increase
-        rMin = Math.floor(GRID_BOUNDS.rMin - bottomSlope * (q - GRID_BOUNDS.qMin));
-
-        // Make sure we don't go below -6 for any q
-        rMin = Math.max(rMin, -6);
-      }
-
-      for (let r = rMin; r <= rMax; r++) {
-        const position = { q, r };
-        // Only add this position if it's not in the excluded list
-        if (!isExcluded(position)) {
-          positions.push(position);
-        }
-      }
-    }
-
-    // Add any forced inclusions that weren't already added
-    for (const position of includedHexagons) {
-      // Check if this position is already in the positions array
-      const alreadyExists = positions.some((p) => p.q === position.q && p.r === position.r);
-
-      // If not already in the positions array, add it
-      if (!alreadyExists) {
-        positions.push(position);
-      }
-    }
-    // Sort positions by distance from center (0,0) for animation purposes
-    return positions.sort((a, b) => {
-      // In axial coordinates, distance from origin is calculated with Manhattan distance formula
-      const distA = (Math.abs(a.q) + Math.abs(a.r) + Math.abs(a.q + a.r)) / 2;
-      const distB = (Math.abs(b.q) + Math.abs(b.r) + Math.abs(b.q + b.r)) / 2;
-      return distA - distB;
-    });
-  }, [GRID_BOUNDS]);
-
-  // Remove the center position as it's already visible
-  const hexagonSequence = useMemo(() => {
-    return allGridPositions.filter((pos) => !(pos.q === 0 && pos.r === 0));
-  }, [allGridPositions]);
-
-  // Define entity types with their abilities and characteristics
-  const entityTypes = useMemo(
-    () => ({
-      archer: {
-        type: "archer" as EntityType,
-        color: "#FF5252", // Red
-        movement: 2, // 2 tiles per turn
-        abilities: {
-          extraRangeInMountains: true,
-          poorRangeInForests: true,
-          canShootOverWater: true,
-          poorDefense: true,
-        },
-      },
-      cavalry: {
-        type: "cavalry" as EntityType,
-        color: "#448AFF", // Blue
-        movement: 3, // 3 tiles per turn
-        abilities: {
-          poorInForests: true,
-          greatInGrass: true,
-        },
-      },
-      infantry: {
-        type: "infantry" as EntityType,
-        color: "#66BB6A", // Green
-        movement: 1, // 1 tile per turn
-        abilities: {
-          highDefense: true,
-          closeRangeBrawler: true,
-        },
-      },
-    }),
-    []
-  );
+  const allGridPositions = useHexagonalGrid();
 
   // Track player entities
   const [playerEntities, setPlayerEntities] = useState<PlayerEntity[]>([]);
@@ -437,69 +109,18 @@ const MainPage = () => {
 
       setPlayerEntities(newEntities);
 
-      // Initialize visible hexagons with center only
-      setVisibleHexagons([{ q: centerPos.q, r: centerPos.r, terrain: centerTerrain }]);
+      // No need to initialize visible hexagons here - now handled by useHexagonAnimation hook
     }
-  }, [allGridPositions, generateTerrainMap, entityTypes]);
+  }, [allGridPositions]);
 
-  // Add new hexagons after delay, one by one
-  useEffect(() => {
-    // Function to add the next hexagon in sequence
-    const addNextHexagon = (index: number) => {
-      if (index >= hexagonSequence.length) return;
-
-      const timer = setTimeout(() => {
-        // Get the hexagon position
-        const hexPosition = hexagonSequence[index];
-        // Get its pre-generated terrain
-        const posKey = `${hexPosition.q},${hexPosition.r}`;
-        const hexTerrain = terrainMap.get(posKey) || terrainTypes.grass;
-
-        // Check if there's an entity at this position
-        const entityAtPosition = playerEntities.find(
-          (entity) => entity.position.q === hexPosition.q && entity.position.r === hexPosition.r
-        );
-
-        setVisibleHexagons((prev) => [
-          ...prev,
-          {
-            ...hexPosition,
-            terrain: hexTerrain,
-            entity: entityAtPosition,
-          },
-        ]);
-        // Schedule the next hexagon
-        addNextHexagon(index + 1);
-      }, ANIMATION_DELAY);
-
-      return () => clearTimeout(timer);
-    };
-
-    // Start adding hexagons after a short delay
-    const initialTimer = setTimeout(() => {
-      addNextHexagon(0);
-    }, 1000);
-
-    return () => clearTimeout(initialTimer);
-  }, [
-    hexagonSequence,
-    ANIMATION_DELAY,
-    getRandomTerrain,
+  // Use custom hook to animate hexagons appearing one by one
+  const visibleHexagons = useHexagonAnimation({
+    allGridPositions,
+    animationDelay: ANIMATION_DELAY,
     terrainMap,
-    terrainTypes.grass,
+    defaultTerrain: TERRAIN_TYPES.grass,
     playerEntities,
-  ]);
-
-  // Calculate the total grid dimensions based on all visible hexagons
-  const gridDimensions = calculateGridDimensions(visibleHexagons, hexSize, hexWidth, hexHeight);
-
-  // Log dimensions when all hexagons are visible
-  useEffect(() => {
-    if (visibleHexagons.length === allGridPositions.length) {
-      console.log("Grid dimensions:", gridDimensions);
-      console.log("Total hexagons:", visibleHexagons.length);
-    }
-  }, [visibleHexagons.length, allGridPositions.length, gridDimensions]);
+  });
 
   const hexagonPoints = generateHexPoints();
 
