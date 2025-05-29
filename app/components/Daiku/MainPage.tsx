@@ -59,11 +59,17 @@ const MainPage = () => {
   // Track which hexagons are within movement range of selected entity
   const [movementRangeHexagons, setMovementRangeHexagons] = useState<GridPosition[]>([]);
 
+  // Track if we're in tile selection mode (selecting a destination for movement/attack)
+  const [isSelectingDestination, setIsSelectingDestination] = useState<boolean>(false);
+
   // Generate all positions in the grid using axial coordinates
   const allGridPositions = useHexagonalGrid();
 
   // Track player entities
   const [playerEntities, setPlayerEntities] = useState<PlayerEntity[]>([]);
+  
+  // Track pending moves for the current turn
+  const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
 
   // Generate terrain map and place initial entities
   useEffect(() => {
@@ -122,6 +128,44 @@ const MainPage = () => {
   const hexagonPoints = generateHexPoints();
 
   // Helper function to determine the fill color based on hexagon state
+  // Handle tile selection for movement/attack
+  const handleTileSelection = (targetPosition: HexagonData) => {
+    if (!selectedEntity) return;
+
+    // Check if there's an enemy at the target position (not implemented yet)
+    const hasEnemy = false; // This will need to be updated when enemies are added
+
+    // Add to pending moves instead of immediately moving
+    const newPendingMoves = new Map(pendingMoves);
+    newPendingMoves.set(selectedEntity.id, { q: targetPosition.q, r: targetPosition.r });
+    setPendingMoves(newPendingMoves);
+
+    // Clear movement range and selection state
+    setMovementRangeHexagons([]);
+    setSelectedEntity(null);
+    setIsSelectingDestination(false);
+  };
+  
+  // Execute all pending moves
+  const executeMoves = () => {
+    if (pendingMoves.size === 0) return;
+    
+    // Apply all pending moves to entities
+    const updatedEntities = playerEntities.map(entity => {
+      const pendingMove = pendingMoves.get(entity.id);
+      if (pendingMove) {
+        return {
+          ...entity,
+          position: pendingMove
+        };
+      }
+      return entity;
+    });
+    
+    setPlayerEntities(updatedEntities);
+    setPendingMoves(new Map());
+  };
+
   const getHexagonFillColor = (position: HexagonData): string => {
     // Check if hexagon is hovered
     // if (hoveredHexagon && hoveredHexagon.q === position.q && hoveredHexagon.r === position.r) {
@@ -133,7 +177,7 @@ const MainPage = () => {
       selectedEntity &&
       movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
     ) {
-      return `${position.terrain.color}90`; // Terrain color with 50% opacity for movement range
+      return `${position.terrain.color}90`; // Terrain color with 90% opacity for movement range
     }
 
     // Check if hexagon is a highlighted neighbor
@@ -197,9 +241,26 @@ const MainPage = () => {
                   left: `calc(50% + ${xPosition}px)`,
                   top: `calc(50% + ${yPositionInverted}px)`,
                   transform: "translate(-50%, -50%)",
-                  cursor: "pointer",
+                  cursor:
+                    selectedEntity &&
+                    movementRangeHexagons.some(
+                      (pos) => pos.q === position.q && pos.r === position.r
+                    )
+                      ? "crosshair"
+                      : "pointer", // Change cursor for valid movement targets
                   // Debug border to see the box boundaries
                   // border: '1px dashed blue'
+                }}
+                onClick={() => {
+                  // Only handle tile clicks if we have a selected entity and this tile is in movement range
+                  if (
+                    selectedEntity &&
+                    movementRangeHexagons.some(
+                      (pos) => pos.q === position.q && pos.r === position.r
+                    )
+                  ) {
+                    handleTileSelection(position);
+                  }
                 }}
                 onMouseEnter={() => {
                   setHoveredHexagon(position);
@@ -306,6 +367,47 @@ const MainPage = () => {
                         </text>
                       </>
                     )}
+                    
+                    {/* Show ghost preview of pending moves */}
+                    {playerEntities.map(entity => {
+                      const pendingMove = pendingMoves.get(entity.id);
+                      // If this position is the pending destination for an entity
+                      if (pendingMove && pendingMove.q === position.q && pendingMove.r === position.r) {
+                        return (
+                          <g key={`ghost-${entity.id}`} opacity="0.5">
+                            {/* Ghost entity background circle */}
+                            <circle
+                              cx="50"
+                              cy="60"
+                              r="15"
+                              fill={entity.entityType.color}
+                              stroke="#888"
+                              strokeWidth="1.5"
+                              strokeDasharray="2,2"
+                            />
+                            {/* Ghost entity type icon */}
+                            <text
+                              x="50"
+                              y="60"
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill="white"
+                              fontSize="14"
+                              fontWeight="bold"
+                            >
+                              {entity.entityType.type === "archer"
+                                ? "🏹"
+                                : entity.entityType.type === "cavalry"
+                                ? "🐎"
+                                : entity.entityType.type === "infantry"
+                                ? "⚔️"
+                                : ""}
+                            </text>
+                          </g>
+                        );
+                      }
+                      return null;
+                    })}
                   </g>
                 </svg>
               </Box>
@@ -313,6 +415,35 @@ const MainPage = () => {
           );
         })}
       </Box>
+      
+      {/* Execute moves button */}
+      {pendingMoves.size > 0 && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+          }}
+        >
+          <button
+            onClick={executeMoves}
+            style={{
+              padding: '10px 20px',
+              fontSize: '18px',
+              backgroundColor: '#4caf50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            }}
+          >
+            Execute Moves ({pendingMoves.size})
+          </button>
+        </Box>
+      )}
     </Container>
   );
 };
