@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Box, Fade } from "@mui/material";
-import { GridPosition, TerrainDefinition, PlayerEntity } from "./utils/types";
+import { GridPosition, TerrainDefinition, PlayerEntity, HexagonData } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
@@ -71,9 +71,6 @@ const MainPage = () => {
       const newTerrainMap = generateTerrainMap(allGridPositions);
       setTerrainMap(newTerrainMap);
 
-      // Set the initial center hexagon with its terrain
-      const centerTerrain = newTerrainMap.get("0,0")!;
-
       // Find suitable starting positions for entities (non-water terrain near center)
       const centerPos = { q: 0, r: 0 };
       const potentialStartPositions = [
@@ -123,6 +120,30 @@ const MainPage = () => {
   });
 
   const hexagonPoints = generateHexPoints();
+
+  // Helper function to determine the fill color based on hexagon state
+  const getHexagonFillColor = (position: HexagonData): string => {
+    // Check if hexagon is hovered
+    // if (hoveredHexagon && hoveredHexagon.q === position.q && hoveredHexagon.r === position.r) {
+    //   return `${position.terrain.color}80`;
+    // }
+
+    // Check if hexagon is in movement range
+    if (
+      selectedEntity &&
+      movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
+    ) {
+      return `${position.terrain.color}90`; // Terrain color with 50% opacity for movement range
+    }
+
+    // Check if hexagon is a highlighted neighbor
+    // if (highlightedNeighbors.some((n) => n.q === position.q && n.r === position.r)) {
+    //   return `${position.terrain.color}80`; // Terrain color with 50% opacity for highlighted neighbors
+    // }
+
+    // Default - use terrain color
+    return position.terrain.color;
+  };
 
   return (
     <Container
@@ -197,20 +218,7 @@ const MainPage = () => {
                 >
                   <polygon
                     points={hexagonPoints}
-                    fill={
-                      hoveredHexagon &&
-                      hoveredHexagon.q === position.q &&
-                      hoveredHexagon.r === position.r
-                        ? "#ffcc80" // Orange for hovered hexagon
-                        : selectedEntity &&
-                          movementRangeHexagons.some(
-                            (pos) => pos.q === position.q && pos.r === position.r
-                          )
-                        ? `${position.terrain.color}80` // Terrain color with 50% opacity for movement range
-                        : highlightedNeighbors.some((n) => n.q === position.q && n.r === position.r)
-                        ? "#80cbc4" // Teal for adjacent hexagons
-                        : position.terrain.color // Terrain color
-                    }
+                    fill={getHexagonFillColor(position)}
                     strokeWidth={
                       selectedEntity &&
                       movementRangeHexagons.some(
@@ -219,14 +227,7 @@ const MainPage = () => {
                         ? "2"
                         : "0"
                     }
-                    stroke={
-                      selectedEntity &&
-                      movementRangeHexagons.some(
-                        (pos) => pos.q === position.q && pos.r === position.r
-                      )
-                        ? "#FF9800"
-                        : "none"
-                    }
+                    stroke="none"
                   />
                   {/* Coordinate text - scales with hexagon size */}
                   <text
