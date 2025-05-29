@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Box, Fade } from "@mui/material";
 import { GridPosition, TerrainDefinition, PlayerEntity, HexagonData } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
@@ -13,8 +13,6 @@ import { generateTerrainMap } from "./utils/generateTerrainMap";
 import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
 import { createHexagonalGrid } from "./hooks/useHexagonalGrid";
 import { useHexagonSize } from "./hooks/useHexagonSize";
-import { saveGameState, loadGameState, clearGameState, terrainMapToArray, arrayToTerrainMap, GameState } from "./utils/gameState";
-import { ResetButton } from "./components/ResetButton";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -86,11 +84,8 @@ const MainPage = () => {
     setAllGridPositions(gridPositions);
   }, []);
 
-  // Track game turns
-  const [currentTurn, setCurrentTurn] = useState<number>(1);
-  
-  // Initialize a new game
-  const initializeNewGame = useCallback(() => {
+  // Generate terrain map and place initial entities
+  useEffect(() => {
     if (allGridPositions.length > 0) {
       const newTerrainMap = generateTerrainMap(allGridPositions);
       setTerrainMap(newTerrainMap);
@@ -127,50 +122,13 @@ const MainPage = () => {
           entityType: playerUnitTypes.infantry,
         },
       ];
+      console.log("newPlayerEntities", newPlayerEntities);
 
       setPlayerEntities(newPlayerEntities);
-      setCurrentTurn(1);
-      
-      // Save the initial game state
-      saveGameState({
-        terrainMap: terrainMapToArray(newTerrainMap),
-        playerEntities: newPlayerEntities,
-        currentTurn: 1,
-        gameStartedAt: Date.now(),
-        lastSavedAt: Date.now()
-      });
+
+      // No need to initialize visible hexagons here - now handled by useHexagonAnimation hook
     }
   }, [allGridPositions]);
-  
-  // Handle reset button click
-  const handleReset = useCallback(() => {
-    clearGameState();
-    initializeNewGame();
-  }, [initializeNewGame]);
-  
-  // Load saved game or initialize a new one
-  useEffect(() => {
-    if (allGridPositions.length > 0) {
-      const savedState = loadGameState();
-      
-      if (savedState) {
-        // Restore from saved state
-        try {
-          const restoredTerrainMap = arrayToTerrainMap(savedState.terrainMap);
-          setTerrainMap(restoredTerrainMap);
-          setPlayerEntities(savedState.playerEntities);
-          setCurrentTurn(savedState.currentTurn);
-          console.log('Game state loaded from save', savedState.lastSavedAt);
-        } catch (error) {
-          console.error('Error restoring saved game:', error);
-          initializeNewGame(); // Fall back to new game if restoration fails
-        }
-      } else {
-        // No saved game, start a new one
-        initializeNewGame();
-      }
-    }
-  }, [allGridPositions, initializeNewGame]);
 
   // Use custom hook to animate hexagons appearing one by one
   const visibleHexagons = useHexagonAnimation({
@@ -202,7 +160,7 @@ const MainPage = () => {
     setIsSelectingDestination(false);
   };
 
-  // Execute all pending moves and advance turn
+  // Execute all pending moves
   const executeMoves = () => {
     if (pendingMoves.size === 0) return;
 
@@ -217,21 +175,11 @@ const MainPage = () => {
       }
       return entity;
     });
+    console.log("updatedEntities", updatedEntities);
+    console.log("originalEntities", playerEntities);
 
-    // Update state
-    const nextTurn = currentTurn + 1;
     setPlayerEntities(updatedEntities);
     setPendingMoves(new Map());
-    setCurrentTurn(nextTurn);
-    
-    // Save game state after moves are executed
-    saveGameState({
-      terrainMap: terrainMapToArray(terrainMap),
-      playerEntities: updatedEntities,
-      currentTurn: nextTurn,
-      gameStartedAt: loadGameState()?.gameStartedAt || Date.now(),
-      lastSavedAt: Date.now()
-    });
   };
 
   // Helper function to check if an entity is at a specific position
@@ -311,24 +259,6 @@ const MainPage = () => {
           alignItems: "center",
         }}
       >
-        {/* Reset button */}
-        <ResetButton onReset={handleReset} />
-        
-        {/* Turn indicator */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
-            zIndex: 1000,
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-          }}
-        >
-          Turn: {currentTurn}
-        </Box>
         {/* Display selected entity info panel */}
         <EntityInfoPanel selectedEntity={selectedEntity} />
 
@@ -354,23 +284,6 @@ const MainPage = () => {
               <Box
                 sx={{
                   position: "absolute",
-                  left: `calc(50% + ${xPosition}px)`,
-                  top: `calc(50% + ${yPositionInverted}px)`,
-                  transform: "translate(-50%, -50%)",
-                  cursor: selectedEntity && movementRangeHexagons.some(
-                    (pos) => pos.q === position.q && pos.r === position.r
-                  )
-                    ? selectedEntity.entityType.type === "archer"
-                      ? customCursors.archer
-                      : selectedEntity.entityType.type === "cavalry"
-                      ? customCursors.cavalry
-                      : selectedEntity.entityType.type === "infantry"
-                      ? customCursors.infantry
-                      : "crosshair"
-                    : "pointer", // Custom cursor based on unit type for valid movement targets
-                }}
-                onClick={() => {
-                  // Only handle tile clicks if we have a selected entity and this tile is in movement range
                   if (
                     selectedEntity &&
                     movementRangeHexagons.some(
@@ -573,7 +486,7 @@ const MainPage = () => {
               boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
             }}
           >
-            End Turn ({pendingMoves.size})
+            Execute Moves ({pendingMoves.size})
           </button>
         </Box>
       )}
