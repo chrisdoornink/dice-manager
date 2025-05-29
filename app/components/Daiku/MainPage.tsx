@@ -11,7 +11,7 @@ import { useHexagonAnimation } from "./hooks/useHexagonAnimation";
 import { ANIMATION_DELAY, TERRAIN_TYPES } from "./utils/generateTerrainMap";
 import { generateTerrainMap } from "./utils/generateTerrainMap";
 import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
-import { useHexagonalGrid } from "./hooks/useHexagonalGrid";
+import { createHexagonalGrid } from "./hooks/useHexagonalGrid";
 import { useHexagonSize } from "./hooks/useHexagonSize";
 
 const MainPage = () => {
@@ -63,13 +63,19 @@ const MainPage = () => {
   const [isSelectingDestination, setIsSelectingDestination] = useState<boolean>(false);
 
   // Generate all positions in the grid using axial coordinates
-  const allGridPositions = useHexagonalGrid();
 
   // Track player entities
   const [playerEntities, setPlayerEntities] = useState<PlayerEntity[]>([]);
-  
+
   // Track pending moves for the current turn
   const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
+
+  const [allGridPositions, setAllGridPositions] = useState<GridPosition[]>([]);
+
+  useEffect(() => {
+    const gridPositions = createHexagonalGrid();
+    setAllGridPositions(gridPositions);
+  }, []);
 
   // Generate terrain map and place initial entities
   useEffect(() => {
@@ -109,6 +115,7 @@ const MainPage = () => {
           entityType: playerUnitTypes.infantry,
         },
       ];
+      console.log("newPlayerEntities", newPlayerEntities);
 
       setPlayerEntities(newPlayerEntities);
 
@@ -145,25 +152,57 @@ const MainPage = () => {
     setSelectedEntity(null);
     setIsSelectingDestination(false);
   };
-  
+
   // Execute all pending moves
   const executeMoves = () => {
     if (pendingMoves.size === 0) return;
-    
+
     // Apply all pending moves to entities
-    const updatedEntities = playerEntities.map(entity => {
+    const updatedEntities = playerEntities.map((entity) => {
       const pendingMove = pendingMoves.get(entity.id);
       if (pendingMove) {
         return {
           ...entity,
-          position: pendingMove
+          position: pendingMove,
         };
       }
       return entity;
     });
-    
+    console.log("updatedEntities", updatedEntities);
+    console.log("originalEntities", playerEntities);
+
     setPlayerEntities(updatedEntities);
     setPendingMoves(new Map());
+  };
+
+  // Helper function to check if an entity is at a specific position
+  const isEntityAtPosition = (entityPosition: GridPosition, position: GridPosition): boolean => {
+    return entityPosition.q === position.q && entityPosition.r === position.r;
+  };
+  
+  // Helper function to check if a pending move is targeting a specific position
+  const isPendingMoveToPosition = (position: GridPosition): boolean => {
+    return Array.from(pendingMoves.values()).some(
+      pendingPos => pendingPos.q === position.q && pendingPos.r === position.r
+    );
+  };
+  
+  // Helper function to get entity at a position
+  const getEntityAtPosition = (position: GridPosition): PlayerEntity | undefined => {
+    return playerEntities.find(entity => 
+      isEntityAtPosition(entity.position, position)
+    );
+  };
+
+  // Helper function to get entity with pending move to a position
+  const getEntityWithPendingMoveTo = (position: GridPosition): PlayerEntity | undefined => {
+    for (const entity of playerEntities) {
+      const pendingMove = pendingMoves.get(entity.id);
+      if (pendingMove && pendingMove.q === position.q && pendingMove.r === position.r) {
+        return entity;
+      }
+    }
+    return undefined;
   };
 
   const getHexagonFillColor = (position: HexagonData): string => {
@@ -234,7 +273,7 @@ const MainPage = () => {
           const yPositionInverted = -yPosition;
 
           return (
-            <Fade key={`${position.q}-${position.r}`} in={true} timeout={1000}>
+            <Fade key={`${position.q}-${position.r}-${index}`} in={true} timeout={200}>
               <Box
                 sx={{
                   position: "absolute",
@@ -308,79 +347,93 @@ const MainPage = () => {
                     transform={`scale(${hexSize / 60})`}
                     style={{ transformOrigin: "50px 60px" }}
                     onClick={(e) => {
+                      // Get entity at this position
+                      const entity = getEntityAtPosition(position);
+                      
                       // Only handle clicks if there's an entity here
-                      if (position.entity) {
+                      if (entity) {
                         e.stopPropagation(); // Prevent triggering hexagon click
                         // If already selected, deselect
-                        if (selectedEntity && selectedEntity.id === position.entity.id) {
+                        if (selectedEntity && selectedEntity.id === entity.id) {
                           setSelectedEntity(null);
                           setMovementRangeHexagons([]);
                         } else {
                           // Otherwise select this entity and calculate movement range
-                          setSelectedEntity(position.entity);
-                          const movementRangeHexagons = calculateMovementRange(
-                            position.entity,
+                          setSelectedEntity(entity);
+                          const calculatedMovementRangeHexagons = calculateMovementRange(
+                            entity,
                             terrainMap
                           );
-                          setMovementRangeHexagons(movementRangeHexagons);
+                          setMovementRangeHexagons(calculatedMovementRangeHexagons);
                         }
                       }
                     }}
                   >
-                    {/* If there's an entity at this position, show it */}
-                    {position.entity && (
-                      <>
-                        {/* Entity background circle */}
-                        <circle
-                          cx="50"
-                          cy="60"
-                          r="15"
-                          fill={position.entity.entityType.color}
-                          stroke={
-                            selectedEntity && selectedEntity.id === position.entity.id
-                              ? "#FFF"
-                              : "#444"
-                          }
-                          strokeWidth={
-                            selectedEntity && selectedEntity.id === position.entity.id ? "3" : "1.5"
-                          }
-                          style={{ cursor: "pointer" }}
-                        />
-                        {/* Entity type icon */}
-                        <text
-                          x="50"
-                          y="60"
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          fill="white"
-                          fontSize="14"
-                          fontWeight="bold"
-                          style={{ pointerEvents: "none" }} // Make text non-clickable (let circle handle clicks)
-                        >
-                          {position.entity.entityType.type === "archer"
-                            ? "🏹"
-                            : position.entity.entityType.type === "cavalry"
-                            ? "🐎"
-                            : position.entity.entityType.type === "infantry"
-                            ? "⚔️"
-                            : ""}
-                        </text>
-                      </>
-                    )}
-                    
-                    {/* Show ghost preview of pending moves */}
-                    {playerEntities.map(entity => {
-                      const pendingMove = pendingMoves.get(entity.id);
-                      // If this position is the pending destination for an entity
-                      if (pendingMove && pendingMove.q === position.q && pendingMove.r === position.r) {
+                    {/* Rendering entities is now done separately, not using position.entity */}
+
+                    {/* Render entity at this position */}
+                    {(() => {
+                      // Get entity at this position (if any)
+                      const entity = getEntityAtPosition(position);
+                      
+                      // Always show entity at its original position, even if it has a pending move
+                      if (entity) {
                         return (
-                          <g key={`ghost-${entity.id}`} opacity="0.5">
-                            {/* Ghost entity background circle */}
+                          <g key={`entity-${entity.id}`}>
+                            {/* Entity background circle */}
                             <circle
                               cx="50"
                               cy="60"
                               r="15"
                               fill={entity.entityType.color}
+                              stroke={
+                                selectedEntity && selectedEntity.id === entity.id
+                                  ? "#FFF"
+                                  : pendingMoves.has(entity.id) 
+                                  ? "#FFA500" // Orange outline for units with pending moves
+                                  : "#444"
+                              }
+                              strokeWidth={
+                                selectedEntity && selectedEntity.id === entity.id || pendingMoves.has(entity.id)
+                                  ? "3" 
+                                  : "1.5"
+                              }
+                              style={{ cursor: "pointer" }}
+                            />
+                            {/* Entity type icon */}
+                            <text
+                              x="50"
+                              y="60"
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill="white"
+                              fontSize="14"
+                              fontWeight="bold"
+                              style={{ pointerEvents: "none" }} // Make text non-clickable
+                            >
+                              {entity.entityType.type === "archer"
+                                ? "🏹"
+                                : entity.entityType.type === "cavalry"
+                                ? "🐎"
+                                : entity.entityType.type === "infantry"
+                                ? "⚔️"
+                                : ""}
+                            </text>
+                          </g>
+                        );
+                      }
+                      
+                      // Show ghost preview of pending moves
+                      const pendingEntity = getEntityWithPendingMoveTo(position);
+                      if (pendingEntity) {
+                        return (
+                          <g key={`ghost-${pendingEntity.id}`} opacity="0.5">
+                            {/* Ghost entity background circle */}
+                            <circle
+                              cx="50"
+                              cy="60"
+                              r="15"
+                              fill={pendingEntity.entityType.color}
                               stroke="#888"
                               strokeWidth="1.5"
                               strokeDasharray="2,2"
@@ -395,19 +448,20 @@ const MainPage = () => {
                               fontSize="14"
                               fontWeight="bold"
                             >
-                              {entity.entityType.type === "archer"
+                              {pendingEntity.entityType.type === "archer"
                                 ? "🏹"
-                                : entity.entityType.type === "cavalry"
+                                : pendingEntity.entityType.type === "cavalry"
                                 ? "🐎"
-                                : entity.entityType.type === "infantry"
+                                : pendingEntity.entityType.type === "infantry"
                                 ? "⚔️"
                                 : ""}
                             </text>
                           </g>
                         );
                       }
+                      
                       return null;
-                    })}
+                    })()}
                   </g>
                 </svg>
               </Box>
@@ -415,29 +469,29 @@ const MainPage = () => {
           );
         })}
       </Box>
-      
+
       {/* Execute moves button */}
       {pendingMoves.size > 0 && (
         <Box
           sx={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            position: "fixed",
+            bottom: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
             zIndex: 1000,
           }}
         >
           <button
             onClick={executeMoves}
             style={{
-              padding: '10px 20px',
-              fontSize: '18px',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              padding: "10px 20px",
+              fontSize: "18px",
+              backgroundColor: "#4caf50",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
             }}
           >
             Execute Moves ({pendingMoves.size})
