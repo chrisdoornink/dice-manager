@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <!-- Tree 1 (left) -->
+  <rect x="25" y="60" width="8" height="15" fill="#754c24"/>
+  <polygon points="15,60 43,60 29,35" fill="#3c9e68"/>
+  <polygon points="17,50 41,50 29,30" fill="#3c9e68"/>
+  <polygon points="20,40 38,40 29,25" fill="#3c9e68"/>
+  
+  <!-- Tree 2 (right) -->
+  <rect x="65" y="60" width="8" height="15" fill="#754c24"/>
+  <polygon points="55,60 83,60 69,35" fill="#3c9e68"/>
+  <polygon points="57,50 81,50 69,30" fill="#3c9e68"/>
+  <polygon points="60,40 78,40 69,25" fill="#3c9e68"/>
+</svg>

@@ -74,7 +74,7 @@ export const useHexagonAnimation = ({
     // Start adding hexagons after a short delay
     const initialTimer = setTimeout(() => {
       addNextHexagon(0);
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(initialTimer);
   }, [hexagonSequence, animationDelay, terrainMap, defaultTerrain, playerEntities]);

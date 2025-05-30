@@ -30,6 +30,7 @@ import {
 } from "./utils/gameState";
 import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
+import SpriteDebugModal from "./components/SpriteDebugModal";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -106,6 +107,9 @@ const MainPage = () => {
 
   // Track game turns
   const [currentTurn, setCurrentTurn] = useState<number>(1);
+  
+  // State for sprite debug modal
+  const [spriteDebugModalOpen, setSpriteDebugModalOpen] = useState<boolean>(false);
 
   // Initialize a new game
   const initializeNewGame = useCallback(() => {
@@ -375,8 +379,28 @@ const MainPage = () => {
           alignItems: "center",
         }}
       >
-        {/* Reset button */}
-        <ResetButton onReset={handleReset} />
+        {/* Reset and Debug buttons */}
+        <Box sx={{ display: "flex", gap: 2, position: "absolute", top: "20px", left: "20px", zIndex: 1000 }}>
+          <ResetButton onReset={handleReset} />
+          
+          {/* Sprite Debug Button - only for development */}
+          <button
+            onClick={() => setSpriteDebugModalOpen(true)}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#FF6B00",
+              color: "white",
+              border: "2px solid #FF4500",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "16px",
+              fontWeight: "bold",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+            }}
+          >
+            Debug Sprites
+          </button>
+        </Box>
 
         {/* Turn indicator */}
         <Box
@@ -461,6 +485,13 @@ const MainPage = () => {
                   viewBox="0 0 100 100"
                   style={{ display: "block" }} // Remove any default spacing
                 >
+                  <defs>
+                    <clipPath id={`hexClip-${position.q}-${position.r}`}>
+                      <polygon points={hexagonPoints} />
+                    </clipPath>
+                  </defs>
+                  
+                  {/* Define the hexagon shape with a stroke */}
                   <polygon
                     points={hexagonPoints}
                     fill={getHexagonFillColor(position)}
@@ -470,30 +501,59 @@ const MainPage = () => {
                         (pos) => pos.q === position.q && pos.r === position.r
                       )
                         ? "2"
-                        : "0"
+                        : "1"
                     }
-                    stroke="none"
+                    stroke={selectedEntity &&
+                      movementRangeHexagons.some(
+                        (pos) => pos.q === position.q && pos.r === position.r
+                      )
+                        ? "#ffffff"
+                        : "#374d22"
+                    }
                   />
-                  {/* Coordinate text - scales with hexagon size */}
-                  <text
-                    x="50"
-                    y="30"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="black"
-                    fontSize={Math.max(hexSize / 5, 8)}
-                    fontWeight="bold"
+                
+                {/* Render forest sprites from sprite sheet - simpler method */}
+                {position.terrain.spriteSheetSprite && (
+                  <foreignObject
+                    x="5"
+                    y="5"
+                    width="90"
+                    height="90"
+                    clipPath={`url(#hexClip-${position.q}-${position.r})`}
                   >
-                    {`${position.q},${position.r}`}
-                  </text>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        backgroundImage: `url(${position.terrain.spriteSheetSprite.spritesheet})`,
+                        backgroundPosition: `-${position.terrain.spriteSheetSprite.x/3}px -${position.terrain.spriteSheetSprite.y/3}px`,
+                        backgroundSize: "342px 342px",
+                        backgroundRepeat: "no-repeat"
+                      }}
+                    />
+                  </foreignObject>
+                )}
+                
+                {/* Coordinate text */}
+                <text
+                  x="50"
+                  y="30"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="black"
+                  fontSize={Math.max(hexSize / 5, 8)}
+                  fontWeight="bold"
+                >
+                  {`${position.q},${position.r}`}
+                </text>
 
-                  {/* Entity display that scales with the hexagon */}
-                  <g
-                    transform={`scale(${hexSize / 60})`}
-                    style={{ transformOrigin: "50px 60px" }}
-                    onClick={(e) => {
-                      // Get entity at this position
-                      const entity = getEntityAtPosition(position);
+                {/* Entity display that scales with the hexagon */}
+                <g
+                  transform={`scale(${hexSize / 60})`}
+                  style={{ transformOrigin: "50px 60px" }}
+                  onClick={(e) => {
+                    // Get entity at this position
+                    const entity = getEntityAtPosition(position);
 
                       // Only handle clicks if there's an entity here
                       if (entity) {
@@ -657,6 +717,12 @@ const MainPage = () => {
           </button>
         </Box>
       )}
+      
+      {/* Sprite Debug Modal */}
+      <SpriteDebugModal
+        open={spriteDebugModalOpen}
+        onClose={() => setSpriteDebugModalOpen(false)}
+      />
     </Container>
   );
 };
