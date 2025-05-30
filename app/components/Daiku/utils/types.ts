@@ -11,7 +11,13 @@ export interface TerrainDefinition {
 }
 
 // Define player entity types
-export type EntityType = "archer" | "cavalry" | "infantry";
+export type PlayerUnitType = "archer" | "cavalry" | "infantry";
+
+// Define enemy entity types
+export type EnemyUnitType = "clobbin" | "spettle" | "skritcher" | "whumble";
+
+// Combined entity type for general usage
+export type EntityType = PlayerUnitType | EnemyUnitType;
 
 export interface EntityDefinition {
   type: EntityType;
@@ -35,10 +41,22 @@ export interface PlayerEntity {
   id: string;
   position: GridPosition;
   entityType: EntityDefinition;
+  isEnemy?: false;
 }
+
+// Enemy entity with position
+export interface EnemyEntity {
+  id: string;
+  position: GridPosition;
+  entityType: EntityDefinition;
+  isEnemy: true;
+}
+
+// Combined entity type
+export type GameEntity = PlayerEntity | EnemyEntity;
 
 // Hexagon with terrain data
 export interface HexagonData extends GridPosition {
   terrain: TerrainDefinition;
-  entity?: PlayerEntity; // Optional entity on this hexagon
+  entity?: GameEntity; // Optional entity on this hexagon
 }

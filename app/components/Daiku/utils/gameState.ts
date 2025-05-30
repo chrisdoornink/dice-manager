@@ -1,4 +1,4 @@
-import { GridPosition, TerrainDefinition, PlayerEntity, HexagonData } from "./types";
+import { GridPosition, TerrainDefinition, PlayerEntity, EnemyEntity, HexagonData } from "./types";
 
 // Define the structure of the game state to be saved in localStorage
 export interface GameState {
@@ -7,6 +7,7 @@ export interface GameState {
   
   // Entities
   playerEntities: PlayerEntity[];
+  enemyEntities: EnemyEntity[];
   
   // Game status
   currentTurn: number;

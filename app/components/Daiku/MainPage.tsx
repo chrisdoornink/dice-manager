@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Box, Fade } from "@mui/material";
-import { GridPosition, TerrainDefinition, PlayerEntity, HexagonData } from "./utils/types";
+import {
+  GridPosition,
+  TerrainDefinition,
+  PlayerEntity,
+  EnemyEntity,
+  GameEntity,
+  HexagonData,
+} from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
@@ -13,7 +20,15 @@ import { generateTerrainMap } from "./utils/generateTerrainMap";
 import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
 import { createHexagonalGrid } from "./hooks/useHexagonalGrid";
 import { useHexagonSize } from "./hooks/useHexagonSize";
-import { saveGameState, loadGameState, clearGameState, terrainMapToArray, arrayToTerrainMap, GameState } from "./utils/gameState";
+import {
+  saveGameState,
+  loadGameState,
+  clearGameState,
+  terrainMapToArray,
+  arrayToTerrainMap,
+  GameState,
+} from "./utils/gameState";
+import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
 
 // Custom cursor styles for each unit type
@@ -76,6 +91,9 @@ const MainPage = () => {
   // Track player entities
   const [playerEntities, setPlayerEntities] = useState<PlayerEntity[]>([]);
 
+  // Enemy entities on the grid
+  const [enemyEntities, setEnemyEntities] = useState<EnemyEntity[]>([]);
+
   // Track pending moves for the current turn
   const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
 
@@ -88,7 +106,7 @@ const MainPage = () => {
 
   // Track game turns
   const [currentTurn, setCurrentTurn] = useState<number>(1);
-  
+
   // Initialize a new game
   const initializeNewGame = useCallback(() => {
     if (allGridPositions.length > 0) {
@@ -130,39 +148,79 @@ const MainPage = () => {
 
       setPlayerEntities(newPlayerEntities);
       setCurrentTurn(1);
-      
+
+      // Add enemy units at the far end of the map
+      const enemyPosition = allGridPositions
+        .filter((pos) => {
+          // Find positions at the far end of the map
+          const distance = Math.abs(pos.q) + Math.abs(pos.r);
+          const posKey = `${pos.q},${pos.r}`;
+          const terrain = newTerrainMap.get(posKey);
+          // Choose non-water terrain that's far from the center
+          return distance > 4 && terrain && terrain.type !== "water";
+        })
+        .sort(() => Math.random() - 0.5)[0]; // Pick a random position from candidates
+
+      const newEnemyEntities: EnemyEntity[] = [
+        {
+          id: "clobbin-1",
+          position: enemyPosition,
+          entityType: enemyUnitTypes.clobbin,
+          isEnemy: true,
+        },
+      ];
+
+      setEnemyEntities(newEnemyEntities);
+
       // Save the initial game state
       saveGameState({
         terrainMap: terrainMapToArray(newTerrainMap),
         playerEntities: newPlayerEntities,
+        enemyEntities: newEnemyEntities,
         currentTurn: 1,
         gameStartedAt: Date.now(),
-        lastSavedAt: Date.now()
+        lastSavedAt: Date.now(),
       });
     }
   }, [allGridPositions]);
-  
+
   // Handle reset button click
   const handleReset = useCallback(() => {
+    // Clear all game state
     clearGameState();
-    initializeNewGame();
+
+    // Reset all React state
+    setTerrainMap(new Map());
+    setPlayerEntities([]);
+    setEnemyEntities([]);
+    setPendingMoves(new Map());
+    setSelectedEntity(null);
+    setMovementRangeHexagons([]);
+    setIsSelectingDestination(false);
+    setCurrentTurn(1);
+
+    // Small delay to ensure the UI clears before generating a new game
+    setTimeout(() => {
+      initializeNewGame();
+    }, 50);
   }, [initializeNewGame]);
-  
+
   // Load saved game or initialize a new one
   useEffect(() => {
     if (allGridPositions.length > 0) {
       const savedState = loadGameState();
-      
+
       if (savedState) {
         // Restore from saved state
         try {
           const restoredTerrainMap = arrayToTerrainMap(savedState.terrainMap);
           setTerrainMap(restoredTerrainMap);
           setPlayerEntities(savedState.playerEntities);
+          setEnemyEntities(savedState.enemyEntities || []); // Handle older saves that might not have enemies
           setCurrentTurn(savedState.currentTurn);
-          console.log('Game state loaded from save', savedState.lastSavedAt);
+          console.log("Game state loaded from save", savedState.lastSavedAt);
         } catch (error) {
-          console.error('Error restoring saved game:', error);
+          console.error("Error restoring saved game:", error);
           initializeNewGame(); // Fall back to new game if restoration fails
         }
       } else {
@@ -223,14 +281,15 @@ const MainPage = () => {
     setPlayerEntities(updatedEntities);
     setPendingMoves(new Map());
     setCurrentTurn(nextTurn);
-    
+
     // Save game state after moves are executed
     saveGameState({
       terrainMap: terrainMapToArray(terrainMap),
       playerEntities: updatedEntities,
       currentTurn: nextTurn,
       gameStartedAt: loadGameState()?.gameStartedAt || Date.now(),
-      lastSavedAt: Date.now()
+      lastSavedAt: Date.now(),
+      enemyEntities: enemyEntities,
     });
   };
 
@@ -238,19 +297,24 @@ const MainPage = () => {
   const isEntityAtPosition = (entityPosition: GridPosition, position: GridPosition): boolean => {
     return entityPosition.q === position.q && entityPosition.r === position.r;
   };
-  
+
   // Helper function to check if a pending move is targeting a specific position
   const isPendingMoveToPosition = (position: GridPosition): boolean => {
     return Array.from(pendingMoves.values()).some(
-      pendingPos => pendingPos.q === position.q && pendingPos.r === position.r
+      (pendingPos) => pendingPos.q === position.q && pendingPos.r === position.r
     );
   };
-  
+
   // Helper function to get entity at a position
-  const getEntityAtPosition = (position: GridPosition): PlayerEntity | undefined => {
-    return playerEntities.find(entity => 
+  const getEntityAtPosition = (position: GridPosition): GameEntity | undefined => {
+    // Check player entities first
+    const playerEntity = playerEntities.find((entity) =>
       isEntityAtPosition(entity.position, position)
     );
+    if (playerEntity) return playerEntity;
+
+    // Then check enemy entities
+    return enemyEntities.find((entity) => isEntityAtPosition(entity.position, position));
   };
 
   // Helper function to get entity with pending move to a position
@@ -313,18 +377,18 @@ const MainPage = () => {
       >
         {/* Reset button */}
         <ResetButton onReset={handleReset} />
-        
+
         {/* Turn indicator */}
         <Box
           sx={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
+            position: "absolute",
+            top: "10px",
+            left: "10px",
             zIndex: 1000,
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            fontWeight: 'bold',
+            backgroundColor: "rgba(255, 255, 255, 0.7)",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            fontWeight: "bold",
           }}
         >
           Turn: {currentTurn}
@@ -357,17 +421,19 @@ const MainPage = () => {
                   left: `calc(50% + ${xPosition}px)`,
                   top: `calc(50% + ${yPositionInverted}px)`,
                   transform: "translate(-50%, -50%)",
-                  cursor: selectedEntity && movementRangeHexagons.some(
-                    (pos) => pos.q === position.q && pos.r === position.r
-                  )
-                    ? selectedEntity.entityType.type === "archer"
-                      ? customCursors.archer
-                      : selectedEntity.entityType.type === "cavalry"
-                      ? customCursors.cavalry
-                      : selectedEntity.entityType.type === "infantry"
-                      ? customCursors.infantry
-                      : "crosshair"
-                    : "pointer", // Custom cursor based on unit type for valid movement targets
+                  cursor:
+                    selectedEntity &&
+                    movementRangeHexagons.some(
+                      (pos) => pos.q === position.q && pos.r === position.r
+                    )
+                      ? selectedEntity.entityType.type === "archer"
+                        ? customCursors.archer
+                        : selectedEntity.entityType.type === "cavalry"
+                        ? customCursors.cavalry
+                        : selectedEntity.entityType.type === "infantry"
+                        ? customCursors.infantry
+                        : "crosshair"
+                      : "pointer", // Custom cursor based on unit type for valid movement targets
                 }}
                 onClick={() => {
                   // Only handle tile clicks if we have a selected entity and this tile is in movement range
@@ -428,22 +494,35 @@ const MainPage = () => {
                     onClick={(e) => {
                       // Get entity at this position
                       const entity = getEntityAtPosition(position);
-                      
+
                       // Only handle clicks if there's an entity here
                       if (entity) {
                         e.stopPropagation(); // Prevent triggering hexagon click
-                        // If already selected, deselect
-                        if (selectedEntity && selectedEntity.id === entity.id) {
+
+                        // Check if this is an enemy entity
+                        if ("isEnemy" in entity && entity.isEnemy === true) {
+                          // For enemy entities, just show info (no selection/movement)
+                          console.log("Enemy entity clicked:", entity);
+                          // Clear any previous selection
                           setSelectedEntity(null);
                           setMovementRangeHexagons([]);
                         } else {
-                          // Otherwise select this entity and calculate movement range
-                          setSelectedEntity(entity);
-                          const calculatedMovementRangeHexagons = calculateMovementRange(
-                            entity,
-                            terrainMap
-                          );
-                          setMovementRangeHexagons(calculatedMovementRangeHexagons);
+                          // For player entities, handle normal selection flow
+                          const playerEntity = entity as PlayerEntity;
+
+                          // If already selected, deselect
+                          if (selectedEntity && selectedEntity.id === playerEntity.id) {
+                            setSelectedEntity(null);
+                            setMovementRangeHexagons([]);
+                          } else {
+                            // Otherwise select this entity and calculate movement range
+                            setSelectedEntity(playerEntity);
+                            const calculatedMovementRangeHexagons = calculateMovementRange(
+                              playerEntity,
+                              terrainMap
+                            );
+                            setMovementRangeHexagons(calculatedMovementRangeHexagons);
+                          }
                         }
                       }
                     }}
@@ -454,7 +533,7 @@ const MainPage = () => {
                     {(() => {
                       // Get entity at this position (if any)
                       const entity = getEntityAtPosition(position);
-                      
+
                       // Always show entity at its original position, even if it has a pending move
                       if (entity) {
                         return (
@@ -468,13 +547,14 @@ const MainPage = () => {
                               stroke={
                                 selectedEntity && selectedEntity.id === entity.id
                                   ? "#FFF"
-                                  : pendingMoves.has(entity.id) 
+                                  : pendingMoves.has(entity.id)
                                   ? "#FFA500" // Orange outline for units with pending moves
                                   : "#444"
                               }
                               strokeWidth={
-                                selectedEntity && selectedEntity.id === entity.id || pendingMoves.has(entity.id)
-                                  ? "3" 
+                                (selectedEntity && selectedEntity.id === entity.id) ||
+                                pendingMoves.has(entity.id)
+                                  ? "3"
                                   : "1.5"
                               }
                               style={{ cursor: "pointer" }}
@@ -501,7 +581,7 @@ const MainPage = () => {
                           </g>
                         );
                       }
-                      
+
                       // Show ghost preview of pending moves
                       const pendingEntity = getEntityWithPendingMoveTo(position);
                       if (pendingEntity) {
@@ -538,7 +618,7 @@ const MainPage = () => {
                           </g>
                         );
                       }
-                      
+
                       return null;
                     })()}
                   </g>

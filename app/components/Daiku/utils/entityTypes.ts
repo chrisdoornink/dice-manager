@@ -1,4 +1,4 @@
-import { enemyUnitType, PlayerUnitType } from "./types";
+import { EnemyUnitType, PlayerUnitType } from "./types";
 
 // Define entity types with their abilities and characteristics
 export const playerUnitTypes = {
@@ -35,7 +35,7 @@ export const playerUnitTypes = {
 
 export const enemyUnitTypes = {
   clobbin: {
-    type: "clobbin" as enemyUnitType,
+    type: "clobbin" as EnemyUnitType,
     color: "#FF9800", // Orange
     movement: 2, // 2 tiles per turn
     abilities: {
@@ -46,7 +46,7 @@ export const enemyUnitTypes = {
     },
   },
   spettle: {
-    type: "spettle" as enemyUnitType,
+    type: "spettle" as EnemyUnitType,
     color: "#FFC107", // Yellow
     movement: 3, // 3 tiles per turn
     abilities: {
@@ -55,7 +55,7 @@ export const enemyUnitTypes = {
     },
   },
   skritcher: {
-    type: "skritcher" as enemyUnitType,
+    type: "skritcher" as EnemyUnitType,
     color: "#E91E63", // Magenta
     movement: 1, // 1 tile per turn
     abilities: {
@@ -64,7 +64,7 @@ export const enemyUnitTypes = {
     },
   },
   whumble: {
-    type: "whumble" as enemyUnitType,
+    type: "whumble" as EnemyUnitType,
     color: "#9C27B0", // Purple
     movement: 1, // 1 tile per turn
     abilities: {
