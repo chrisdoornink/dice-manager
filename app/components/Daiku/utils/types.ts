@@ -12,6 +12,7 @@ export interface SpriteSheetSprite {
   y: number;           // Y position in the sprite sheet
   width: number;       // Width of the sprite
   height: number;      // Height of the sprite
+  singleImage?: boolean; // Whether this is a single image (not part of a sprite sheet)
 }
 
 export interface TerrainDefinition {
@@ -19,6 +20,7 @@ export interface TerrainDefinition {
   color: string;
   // Properties for sprite-based rendering
   sprite?: string;               // Path to a simple sprite image
+  backgroundImage?: string;      // Path to a background image for the terrain
   spriteSheetSprite?: SpriteSheetSprite; // For sprites from a sprite sheet
   spriteScale?: number;          // Scale factor for the sprite (1.0 = original size)
 }

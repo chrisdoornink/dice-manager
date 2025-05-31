@@ -186,14 +186,14 @@ export const MOUNTAIN_SPRITES = [
 // within the hexagon for visual variety
 export const FOREST_OFFSETS = [
   { x: 0, y: 0 }, // Centered
-  { x: -10, y: 0 }, // Slight left
-  { x: 10, y: 0 }, // Slight right
-  { x: 0, y: -10 }, // Slight up
-  { x: 0, y: 10 }, // Slight down
-  { x: -10, y: -10 }, // Upper left
-  { x: 10, y: -10 }, // Upper right
-  { x: -10, y: 10 }, // Lower left
-  { x: 10, y: 10 }, // Lower right
+  // { x: -10, y: 0 }, // Slight left
+  // { x: 10, y: 0 }, // Slight right
+  // { x: 0, y: -10 }, // Slight up
+  // { x: 0, y: 10 }, // Slight down
+  // { x: -10, y: -10 }, // Upper left
+  // { x: 10, y: -10 }, // Upper right
+  // { x: -10, y: 10 }, // Lower left
+  // { x: 10, y: 10 }, // Lower right
 ];
 
 // Same offsets can be used for mountains
@@ -242,12 +242,12 @@ export const TERRAIN_TYPES = {
   grass: {
     type: "grass" as TerrainType,
     color: "#7EC850",
-    sprite: "/images/terrain/grass.svg",
+    backgroundImage: "/images/terrain/grass.png",
     spriteScale: 1.0,
   },
   mountain: {
     type: "mountain" as TerrainType,
-    color: "#A0A0A0",
+    color: "#5a8c42", // Green with a more noticeable brown tint
     // The actual sprite will be randomly assigned per tile
     spriteScale: 1.0,
   },
@@ -260,7 +260,7 @@ export const TERRAIN_TYPES = {
   water: {
     type: "water" as TerrainType,
     color: "#5DA9E9",
-    sprite: "/images/terrain/water.svg",
+    backgroundImage: "/images/terrain/water_tile.png",
     spriteScale: 1.0,
   },
 };

@@ -107,7 +107,7 @@ const MainPage = () => {
 
   // Track game turns
   const [currentTurn, setCurrentTurn] = useState<number>(1);
-  
+
   // State for sprite debug modal
   const [spriteDebugModalOpen, setSpriteDebugModalOpen] = useState<boolean>(false);
 
@@ -380,9 +380,18 @@ const MainPage = () => {
         }}
       >
         {/* Reset and Debug buttons */}
-        <Box sx={{ display: "flex", gap: 2, position: "absolute", top: "20px", left: "20px", zIndex: 1000 }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            zIndex: 1000,
+          }}
+        >
           <ResetButton onReset={handleReset} />
-          
+
           {/* Sprite Debug Button - only for development */}
           <button
             onClick={() => setSpriteDebugModalOpen(true)}
@@ -395,7 +404,7 @@ const MainPage = () => {
               cursor: "pointer",
               fontSize: "16px",
               fontWeight: "bold",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
             }}
           >
             Debug Sprites
@@ -422,6 +431,7 @@ const MainPage = () => {
 
         {/* Render all visible hexagons */}
         {visibleHexagons.map((position, index) => {
+          console.log("position", position);
           // Convert axial coordinates to pixel coordinates for flat-topped hexagons
           // Formula for flat-top hexagons in axial coordinates
           // The spacing factor controls how close hexagons are packed
@@ -436,6 +446,12 @@ const MainPage = () => {
 
           // Invert y-position to make positive r go upward
           const yPositionInverted = -yPosition;
+
+          console.log(position.terrain.type);
+
+          if (position.terrain.type === "water") {
+            console.log("Water tile at", position.q, position.r);
+          }
 
           return (
             <Fade key={`${position.q}-${position.r}-${index}`} in={true} timeout={200}>
@@ -490,11 +506,47 @@ const MainPage = () => {
                       <polygon points={hexagonPoints} />
                     </clipPath>
                   </defs>
+
+                  {/* For water and grass tiles, add the image as a repeating pattern */}
+                  {(position.terrain.type === "water" || position.terrain.type === "grass") && position.terrain.backgroundImage && (
+                    <>
+                      <defs>
+                        <pattern
+                          id={`terrain-pattern-${position.q}-${position.r}`}
+                          patternUnits="userSpaceOnUse"
+                          width="50"
+                          height="50"
+                          patternTransform="scale(1.5)">
+                          <image
+                            href={position.terrain.backgroundImage}
+                            x="0"
+                            y="0"
+                            width="50"
+                            height="50"
+                            preserveAspectRatio="xMidYMid slice"
+                          />
+                        </pattern>
+                      </defs>
+                      <polygon
+                        points={hexagonPoints}
+                        fill={`url(#terrain-pattern-${position.q}-${position.r})`}
+                        clipPath={`url(#hexClip-${position.q}-${position.r})`}
+                      />
+                    </>
+                  )}
                   
                   {/* Define the hexagon shape with a stroke */}
                   <polygon
                     points={hexagonPoints}
-                    fill={getHexagonFillColor(position)}
+                    fill={
+                      position.terrain.type === "water" ? "#5DA9E9" :
+                      position.terrain.type === "grass" ? "#7EC850" :
+                      getHexagonFillColor(position)
+                    }
+                    fillOpacity={(
+                      position.terrain.type === "water" || 
+                      position.terrain.type === "grass"
+                    ) ? "0.6" : "1"}
                     strokeWidth={
                       selectedEntity &&
                       movementRangeHexagons.some(
@@ -503,7 +555,8 @@ const MainPage = () => {
                         ? "2"
                         : "1"
                     }
-                    stroke={selectedEntity &&
+                    stroke={
+                      selectedEntity &&
                       movementRangeHexagons.some(
                         (pos) => pos.q === position.q && pos.r === position.r
                       )
@@ -511,49 +564,55 @@ const MainPage = () => {
                         : "#374d22"
                     }
                   />
-                
-                {/* Render forest sprites from sprite sheet - simpler method */}
-                {position.terrain.spriteSheetSprite && (
-                  <foreignObject
-                    x="5"
-                    y="5"
-                    width="90"
-                    height="90"
-                    clipPath={`url(#hexClip-${position.q}-${position.r})`}
-                  >
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        backgroundImage: `url(${position.terrain.spriteSheetSprite.spritesheet})`,
-                        backgroundPosition: `-${position.terrain.spriteSheetSprite.x/3}px -${position.terrain.spriteSheetSprite.y/3}px`,
-                        backgroundSize: "342px 342px",
-                        backgroundRepeat: "no-repeat"
-                      }}
-                    />
-                  </foreignObject>
-                )}
-                
-                {/* Coordinate text */}
-                <text
-                  x="50"
-                  y="30"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="black"
-                  fontSize={Math.max(hexSize / 5, 8)}
-                  fontWeight="bold"
-                >
-                  {`${position.q},${position.r}`}
-                </text>
 
-                {/* Entity display that scales with the hexagon */}
-                <g
-                  transform={`scale(${hexSize / 60})`}
-                  style={{ transformOrigin: "50px 60px" }}
-                  onClick={(e) => {
-                    // Get entity at this position
-                    const entity = getEntityAtPosition(position);
+                  {/* Render forest sprites from sprite sheet - simpler method */}
+                  {position.terrain.spriteSheetSprite && (
+                    <foreignObject
+                      x="5"
+                      y="5"
+                      width="90"
+                      height="90"
+                      clipPath={`url(#hexClip-${position.q}-${position.r})`}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          backgroundImage: `url(${position.terrain.spriteSheetSprite.spritesheet})`,
+                          backgroundPosition: position.terrain.spriteSheetSprite.singleImage
+                            ? `center center`
+                            : `-${position.terrain.spriteSheetSprite.x / 3}px -${
+                                position.terrain.spriteSheetSprite.y / 3
+                              }px`,
+                          backgroundSize: position.terrain.spriteSheetSprite.singleImage
+                            ? "cover"
+                            : "342px 342px",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    </foreignObject>
+                  )}
+
+                  {/* Coordinate text */}
+                  <text
+                    x="50"
+                    y="30"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="black"
+                    fontSize={Math.max(hexSize / 5, 8)}
+                    fontWeight="bold"
+                  >
+                    {`${position.q},${position.r}`}
+                  </text>
+
+                  {/* Entity display that scales with the hexagon */}
+                  <g
+                    transform={`scale(${hexSize / 60})`}
+                    style={{ transformOrigin: "50px 60px" }}
+                    onClick={(e) => {
+                      // Get entity at this position
+                      const entity = getEntityAtPosition(position);
 
                       // Only handle clicks if there's an entity here
                       if (entity) {
@@ -717,7 +776,7 @@ const MainPage = () => {
           </button>
         </Box>
       )}
-      
+
       {/* Sprite Debug Modal */}
       <SpriteDebugModal
         open={spriteDebugModalOpen}
