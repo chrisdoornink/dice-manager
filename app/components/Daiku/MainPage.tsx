@@ -508,52 +508,57 @@ const MainPage = () => {
                   </defs>
 
                   {/* For water and grass tiles, add the image as a repeating pattern */}
-                  {(position.terrain.type === "water" || position.terrain.type === "grass") && position.terrain.backgroundImage && (
-                    <>
-                      <defs>
-                        <pattern
-                          id={`terrain-pattern-${position.q}-${position.r}`}
-                          patternUnits="userSpaceOnUse"
-                          width="50"
-                          height="50"
-                          patternTransform="scale(1.5)">
-                          <image
-                            href={position.terrain.backgroundImage}
-                            x="0"
-                            y="0"
+                  {(position.terrain.type === "water" || position.terrain.type === "grass") &&
+                    position.terrain.backgroundImage && (
+                      <>
+                        <defs>
+                          <pattern
+                            id={`terrain-pattern-${position.q}-${position.r}`}
+                            patternUnits="userSpaceOnUse"
                             width="50"
                             height="50"
-                            preserveAspectRatio="xMidYMid slice"
-                          />
-                        </pattern>
-                      </defs>
-                      <polygon
-                        points={hexagonPoints}
-                        fill={`url(#terrain-pattern-${position.q}-${position.r})`}
-                        clipPath={`url(#hexClip-${position.q}-${position.r})`}
-                      />
-                    </>
-                  )}
-                  
+                            patternTransform="scale(1.5)"
+                          >
+                            <image
+                              href={position.terrain.backgroundImage}
+                              x="0"
+                              y="0"
+                              width="50"
+                              height="50"
+                              preserveAspectRatio="xMidYMid slice"
+                            />
+                          </pattern>
+                        </defs>
+                        <polygon
+                          points={hexagonPoints}
+                          fill={`url(#terrain-pattern-${position.q}-${position.r})`}
+                          clipPath={`url(#hexClip-${position.q}-${position.r})`}
+                        />
+                      </>
+                    )}
+
                   {/* Define the hexagon shape with a stroke */}
                   <polygon
                     points={hexagonPoints}
                     fill={
-                      position.terrain.type === "water" ? "#5DA9E9" :
-                      position.terrain.type === "grass" ? "#7EC850" :
-                      getHexagonFillColor(position)
+                      position.terrain.type === "water"
+                        ? "#5DA9E9"
+                        : position.terrain.type === "grass"
+                        ? "#7EC850"
+                        : getHexagonFillColor(position)
                     }
-                    fillOpacity={(
-                      position.terrain.type === "water" || 
-                      position.terrain.type === "grass"
-                    ) ? "0.6" : "1"}
+                    fillOpacity={
+                      position.terrain.type === "water" || position.terrain.type === "grass"
+                        ? "0.6"
+                        : "1"
+                    }
                     strokeWidth={
                       selectedEntity &&
                       movementRangeHexagons.some(
                         (pos) => pos.q === position.q && pos.r === position.r
                       )
                         ? "2"
-                        : "1"
+                        : "4"
                     }
                     stroke={
                       selectedEntity &&
