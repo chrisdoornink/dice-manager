@@ -59,13 +59,14 @@ const Entity: React.FC<EntityProps> = ({
           sx={{
             position: "absolute",
             width: "100%",
-            height: "100%", // Make even taller to show full sprite
+            height: "100%",
             backgroundImage: `url(${entity.entityType.spriteSheetSprite.spritesheet})`,
             backgroundPosition: `-${entity.entityType.spriteSheetSprite.x}px -${entity.entityType.spriteSheetSprite.y}px`,
             backgroundSize: "256px 256px",
             backgroundRepeat: "no-repeat",
-            transform: "scale(1.5)", // Scale up to fill more of the tile
+            transform: !entity.isEnemy ? "scale(1.3)" : "scale(1.5)", // Player sprites need to be shifted up
             transformOrigin: "center bottom", // Scale from bottom center to keep feet in position
+            top: !entity.isEnemy ? "8px" : "0", // Move player sprites up even more
           }}
         />
       </Box>
