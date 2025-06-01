@@ -11,6 +11,7 @@ import {
   HexagonData,
 } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
+import Entity from "./components/Entity";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
 import { generateHexPoints } from "./utils/hexMath";
@@ -598,18 +599,7 @@ const MainPage = () => {
                     </foreignObject>
                   )}
 
-                  {/* Coordinate text */}
-                  <text
-                    x="50"
-                    y="30"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="black"
-                    fontSize={Math.max(hexSize / 5, 8)}
-                    fontWeight="bold"
-                  >
-                    {`${position.q},${position.r}`}
-                  </text>
+                  {/* Coordinate text removed - not needed for gameplay */}
 
                   {/* Entity display that scales with the hexagon */}
                   <g
@@ -662,46 +652,40 @@ const MainPage = () => {
                       if (entity) {
                         return (
                           <g key={`entity-${entity.id}`}>
-                            {/* Entity background circle */}
-                            <circle
-                              cx="50"
-                              cy="60"
-                              r="15"
-                              fill={entity.entityType.color}
-                              stroke={
-                                selectedEntity && selectedEntity.id === entity.id
-                                  ? "#FFF"
-                                  : pendingMoves.has(entity.id)
-                                  ? "#FFA500" // Orange outline for units with pending moves
-                                  : "#444"
-                              }
-                              strokeWidth={
-                                (selectedEntity && selectedEntity.id === entity.id) ||
-                                pendingMoves.has(entity.id)
-                                  ? "3"
-                                  : "1.5"
-                              }
-                              style={{ cursor: "pointer" }}
-                            />
-                            {/* Entity type icon */}
-                            <text
-                              x="50"
-                              y="60"
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill="white"
-                              fontSize="14"
-                              fontWeight="bold"
-                              style={{ pointerEvents: "none" }} // Make text non-clickable
-                            >
-                              {entity.entityType.type === "archer"
-                                ? "🏹"
-                                : entity.entityType.type === "cavalry"
-                                ? "🐎"
-                                : entity.entityType.type === "infantry"
-                                ? "⚔️"
-                                : ""}
-                            </text>
+                            <foreignObject x="10" y="-10" width="80" height="130">
+                              <Entity 
+                                entity={entity}
+                                isSelected={!!(selectedEntity && selectedEntity.id === entity.id)}
+                                isPendingMove={pendingMoves.has(entity.id)}
+                                onClick={(entity: GameEntity) => {
+                                  // Check if this is an enemy entity
+                                  if (entity.isEnemy) {
+                                    // For enemy entities, just show info (no selection/movement)
+                                    console.log("Enemy entity clicked:", entity);
+                                    // Clear any previous selection
+                                    setSelectedEntity(null);
+                                    setMovementRangeHexagons([]);
+                                  } else {
+                                    // For player entities, handle normal selection flow
+                                    const playerEntity = entity as PlayerEntity;
+
+                                    // If already selected, deselect
+                                    if (selectedEntity && selectedEntity.id === playerEntity.id) {
+                                      setSelectedEntity(null);
+                                      setMovementRangeHexagons([]);
+                                    } else {
+                                      // Otherwise select this entity and calculate movement range
+                                      setSelectedEntity(playerEntity);
+                                      const calculatedMovementRangeHexagons = calculateMovementRange(
+                                        playerEntity,
+                                        terrainMap
+                                      );
+                                      setMovementRangeHexagons(calculatedMovementRangeHexagons);
+                                    }
+                                  }
+                                }}
+                              />
+                            </foreignObject>
                           </g>
                         );
                       }
@@ -710,35 +694,14 @@ const MainPage = () => {
                       const pendingEntity = getEntityWithPendingMoveTo(position);
                       if (pendingEntity) {
                         return (
-                          <g key={`ghost-${pendingEntity.id}`} opacity="0.5">
-                            {/* Ghost entity background circle */}
-                            <circle
-                              cx="50"
-                              cy="60"
-                              r="15"
-                              fill={pendingEntity.entityType.color}
-                              stroke="#888"
-                              strokeWidth="1.5"
-                              strokeDasharray="2,2"
-                            />
-                            {/* Ghost entity type icon */}
-                            <text
-                              x="50"
-                              y="60"
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill="white"
-                              fontSize="14"
-                              fontWeight="bold"
-                            >
-                              {pendingEntity.entityType.type === "archer"
-                                ? "🏹"
-                                : pendingEntity.entityType.type === "cavalry"
-                                ? "🐎"
-                                : pendingEntity.entityType.type === "infantry"
-                                ? "⚔️"
-                                : ""}
-                            </text>
+                          <g key={`ghost-${pendingEntity.id}`}>
+                            <foreignObject x="10" y="-10" width="80" height="130">
+                              <Entity 
+                                entity={pendingEntity}
+                                isGhost={true}
+                                isPendingMove={true}
+                              />
+                            </foreignObject>
                           </g>
                         );
                       }

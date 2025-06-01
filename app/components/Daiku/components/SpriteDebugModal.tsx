@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Modal, Typography, Button, Grid, Paper, Tabs, Tab } from '@mui/material';
 import { FOREST_SPRITES, MOUNTAIN_SPRITES } from '../utils/generateTerrainMap';
+import { playerUnitTypes, enemyUnitTypes } from '../utils/entityTypes';
 
 interface SpriteDebugModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ const SpriteDebugModal: React.FC<SpriteDebugModalProps> = ({ open, onClose }) =>
 
   const forestSpriteSheet = "/images/terrain/forest_sprites.png";
   const mountainSpriteSheet = "/images/terrain/mountains_sprites.png";
+  const entitySpriteSheet = "/images/entities/entity_sprites_v1.png";
 
   return (
     <Modal
@@ -50,6 +52,7 @@ const SpriteDebugModal: React.FC<SpriteDebugModalProps> = ({ open, onClose }) =>
         <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Forest Sprites" />
           <Tab label="Mountain Sprites" />
+          <Tab label="Entity Sprites" />
         </Tabs>
         
         {/* Forest Sprites Tab */}
@@ -212,6 +215,160 @@ const SpriteDebugModal: React.FC<SpriteDebugModalProps> = ({ open, onClose }) =>
                   margin: '0 auto'
                 }}
               />
+            </Box>
+          </>
+        )}
+
+        {/* Entity Sprites Tab */}
+        {tabValue === 2 && (
+          <>
+            <Typography variant="subtitle1" gutterBottom>
+              Player Entity Sprites:
+            </Typography>
+            <Grid container spacing={3}>
+              {Object.entries(playerUnitTypes).map(([key, unit], index) => (
+                unit.spriteSheetSprite ? (
+                  <Grid item key={`player-${key}`} xs={12} sm={6} md={4} lg={3}>
+                    <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+                      <Typography variant="subtitle2" gutterBottom align="center">
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </Typography>
+                      
+                      {/* Use the same background image approach as the game board */}
+                      <Box
+                        sx={{
+                          width: '128px',
+                          height: '128px',
+                          mb: 2,
+                          position: 'relative',
+                          backgroundColor: '#ffffff',
+                          border: '1px dashed #ccc',
+                          backgroundImage: `url(${entitySpriteSheet})`,
+                          backgroundPosition: `-${unit.spriteSheetSprite.x}px -${unit.spriteSheetSprite.y}px`,
+                          backgroundSize: '256px 256px',
+                          margin: '0 auto',
+                        }}
+                      />
+                      
+                      <Typography variant="body2">
+                        <strong>Coordinates:</strong><br />
+                        x: {unit.spriteSheetSprite.x}, y: {unit.spriteSheetSprite.y}<br />
+                        width: {unit.spriteSheetSprite.width}, height: {unit.spriteSheetSprite.height}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ) : null
+              ))}
+            </Grid>
+            
+            <Typography variant="subtitle1" gutterBottom sx={{ mt: 4 }}>
+              Enemy Entity Sprites:
+            </Typography>
+            <Grid container spacing={3}>
+              {Object.entries(enemyUnitTypes).map(([key, unit], index) => (
+                unit.spriteSheetSprite ? (
+                  <Grid item key={`enemy-${key}`} xs={12} sm={6} md={4} lg={3}>
+                    <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+                      <Typography variant="subtitle2" gutterBottom align="center">
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </Typography>
+                      
+                      {/* Use the same background image approach as the game board */}
+                      <Box
+                        sx={{
+                          width: '128px',
+                          height: '128px',
+                          mb: 2,
+                          position: 'relative',
+                          backgroundColor: '#ffffff',
+                          border: '1px dashed #ccc',
+                          backgroundImage: `url(${entitySpriteSheet})`,
+                          backgroundPosition: `-${unit.spriteSheetSprite.x}px -${unit.spriteSheetSprite.y}px`,
+                          backgroundSize: '256px 256px',
+                          margin: '0 auto',
+                        }}
+                      />
+                      
+                      <Typography variant="body2">
+                        <strong>Coordinates:</strong><br />
+                        x: {unit.spriteSheetSprite.x}, y: {unit.spriteSheetSprite.y}<br />
+                        width: {unit.spriteSheetSprite.width}, height: {unit.spriteSheetSprite.height}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ) : null
+              ))}
+            </Grid>
+            
+            {/* Full Sprite Sheet Reference */}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Full Entity Sprite Sheet Reference (with 64px grid overlay):
+              </Typography>
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: '256px',
+                  height: '256px',
+                  margin: '0 auto',
+                  border: '1px solid #ccc',
+                  backgroundImage: `url(${entitySpriteSheet})`,
+                  backgroundSize: 'contain',
+                }}
+              >
+                {/* Horizontal grid lines */}
+                {[...Array(5)].map((_, i) => (
+                  <Box
+                    key={`h-line-${i}`}
+                    sx={{
+                      position: 'absolute',
+                      top: `${i * 64}px`,
+                      left: 0,
+                      width: '100%',
+                      height: '1px',
+                      backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                      zIndex: 1,
+                    }}
+                  />
+                ))}
+                
+                {/* Vertical grid lines */}
+                {[...Array(5)].map((_, i) => (
+                  <Box
+                    key={`v-line-${i}`}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: `${i * 64}px`,
+                      width: '1px',
+                      height: '100%',
+                      backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                      zIndex: 1,
+                    }}
+                  />
+                ))}
+                
+                {/* Coordinate labels */}
+                {[...Array(4)].map((_, y) => (
+                  [...Array(4)].map((_, x) => (
+                    <Box
+                      key={`coord-${x}-${y}`}
+                      sx={{
+                        position: 'absolute',
+                        top: `${y * 64 + 2}px`,
+                        left: `${x * 64 + 2}px`,
+                        padding: '2px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        color: 'white',
+                        fontSize: '10px',
+                        zIndex: 2,
+                      }}
+                    >
+                      {`x:${x*64} y:${y*64}`}
+                    </Box>
+                  ))
+                ))}
+              </Box>
             </Box>
           </>
         )}

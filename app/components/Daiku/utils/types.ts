@@ -8,10 +8,10 @@ export type TerrainType = "grass" | "mountain" | "forest" | "water";
 // Define a sprite from a sprite sheet
 export interface SpriteSheetSprite {
   spritesheet: string; // Path to the sprite sheet
-  x: number;           // X position in the sprite sheet
-  y: number;           // Y position in the sprite sheet
-  width: number;       // Width of the sprite
-  height: number;      // Height of the sprite
+  x: number; // X position in the sprite sheet
+  y: number; // Y position in the sprite sheet
+  width: number; // Width of the sprite
+  height: number; // Height of the sprite
   singleImage?: boolean; // Whether this is a single image (not part of a sprite sheet)
 }
 
@@ -19,10 +19,10 @@ export interface TerrainDefinition {
   type: TerrainType;
   color: string;
   // Properties for sprite-based rendering
-  sprite?: string;               // Path to a simple sprite image
-  backgroundImage?: string;      // Path to a background image for the terrain
+  sprite?: string; // Path to a simple sprite image
+  backgroundImage?: string; // Path to a background image for the terrain
   spriteSheetSprite?: SpriteSheetSprite; // For sprites from a sprite sheet
-  spriteScale?: number;          // Scale factor for the sprite (1.0 = original size)
+  spriteScale?: number; // Scale factor for the sprite (1.0 = original size)
 }
 
 // Define player entity types
@@ -37,6 +37,8 @@ export type EntityType = PlayerUnitType | EnemyUnitType;
 export interface EntityDefinition {
   type: EntityType;
   color: string;
+  sprite?: string; // Path to entity sprite image
+  spriteSheetSprite?: SpriteSheetSprite;
   movement: number;
   // Special abilities and characteristics
   abilities: {
@@ -48,6 +50,9 @@ export interface EntityDefinition {
     greatInGrass?: boolean;
     highDefense?: boolean;
     closeRangeBrawler?: boolean;
+    waterOnly?: boolean; // For entities that can only exist on water tiles
+    canCastHealing?: boolean;
+    canCastFireball?: boolean;
   };
 }
 
