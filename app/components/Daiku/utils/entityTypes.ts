@@ -27,7 +27,7 @@ export const playerUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 54, // Second sprite in first row (0-indexed)
-      y: 0, // First row
+      y: 0,
       width: 64,
       height: 94,
       singleImage: false,
@@ -44,7 +44,7 @@ export const playerUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 0,
-      y: 0, // First row
+      y: 0,
       width: 64,
       height: 94,
       singleImage: false,
@@ -82,7 +82,7 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 0, // First sprite in bottom half
-      y: 64, // Second row
+      y: 114, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -100,8 +100,8 @@ export const enemyUnitTypes = {
     color: "#FFC107", // Yellow
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 64, // Second sprite in second row
-      y: 64, // Second row
+      x: 54, // Second sprite in second row
+      y: 114, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -116,8 +116,8 @@ export const enemyUnitTypes = {
     color: "#E91E63", // Magenta
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 128, // Third sprite in second row
-      y: 64, // Second row
+      x: 110, // Third sprite in second row
+      y: 114, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -133,8 +133,8 @@ export const enemyUnitTypes = {
     color: "#9C27B0", // Purple
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 192, // Fourth sprite in second row
-      y: 64, // Second row
+      x: 164, // Fourth sprite in second row
+      y: 124, // Second row
       width: 64,
       height: 64,
       singleImage: false,

@@ -132,7 +132,7 @@ const MainPage = () => {
       // Shuffle the positions to randomize placement
       const shuffledPositions = [...potentialStartPositions].sort(() => Math.random() - 0.5);
 
-      // Create the entities at the shuffled positions
+      // Create the entities at the shuffled positions - one of each type for easier debugging
       const newPlayerEntities: PlayerEntity[] = [
         {
           id: "archer-1",
@@ -149,28 +149,52 @@ const MainPage = () => {
           position: shuffledPositions[2],
           entityType: playerUnitTypes.infantry,
         },
+        {
+          id: "mage-1",
+          position: shuffledPositions[3] || { q: 1, r: -1 }, // Fallback position if not enough shuffled positions
+          entityType: playerUnitTypes.mage,
+        },
       ];
 
       setPlayerEntities(newPlayerEntities);
       setCurrentTurn(1);
 
-      // Add enemy units at the far end of the map
-      const enemyPosition = allGridPositions
-        .filter((pos) => {
-          // Find positions at the far end of the map
-          const distance = Math.abs(pos.q) + Math.abs(pos.r);
-          const posKey = `${pos.q},${pos.r}`;
-          const terrain = newTerrainMap.get(posKey);
-          // Choose non-water terrain that's far from the center
-          return distance > 4 && terrain && terrain.type !== "water";
-        })
-        .sort(() => Math.random() - 0.5)[0]; // Pick a random position from candidates
+      const getEnemyPosition = () => {
+        return allGridPositions
+          .filter((pos) => {
+            // Find positions at the far end of the map
+            const distance = Math.abs(pos.q) + Math.abs(pos.r);
+            const posKey = `${pos.q},${pos.r}`;
+            const terrain = newTerrainMap.get(posKey);
+            // Choose non-water terrain that's far from the center
+            return distance > 4 && terrain && terrain.type !== "water";
+          })
+          .sort(() => Math.random() - 0.5)[0]; // Pick a random position from candidates
+      };
 
       const newEnemyEntities: EnemyEntity[] = [
         {
           id: "clobbin-1",
-          position: enemyPosition,
+          position: getEnemyPosition(),
           entityType: enemyUnitTypes.clobbin,
+          isEnemy: true,
+        },
+        {
+          id: "spud dle-1",
+          position: getEnemyPosition(),
+          entityType: enemyUnitTypes.spuddle,
+          isEnemy: true,
+        },
+        {
+          id: "skritcher-1",
+          position: getEnemyPosition(),
+          entityType: enemyUnitTypes.skritcher,
+          isEnemy: true,
+        },
+        {
+          id: "whumble-1",
+          position: getEnemyPosition(),
+          entityType: enemyUnitTypes.whumble,
           isEnemy: true,
         },
       ];
@@ -653,7 +677,7 @@ const MainPage = () => {
                         return (
                           <g key={`entity-${entity.id}`}>
                             <foreignObject x="10" y="-10" width="80" height="130">
-                              <Entity 
+                              <Entity
                                 entity={entity}
                                 isSelected={!!(selectedEntity && selectedEntity.id === entity.id)}
                                 isPendingMove={pendingMoves.has(entity.id)}
@@ -676,10 +700,8 @@ const MainPage = () => {
                                     } else {
                                       // Otherwise select this entity and calculate movement range
                                       setSelectedEntity(playerEntity);
-                                      const calculatedMovementRangeHexagons = calculateMovementRange(
-                                        playerEntity,
-                                        terrainMap
-                                      );
+                                      const calculatedMovementRangeHexagons =
+                                        calculateMovementRange(playerEntity, terrainMap);
                                       setMovementRangeHexagons(calculatedMovementRangeHexagons);
                                     }
                                   }
@@ -696,11 +718,7 @@ const MainPage = () => {
                         return (
                           <g key={`ghost-${pendingEntity.id}`}>
                             <foreignObject x="10" y="-10" width="80" height="130">
-                              <Entity 
-                                entity={pendingEntity}
-                                isGhost={true}
-                                isPendingMove={true}
-                              />
+                              <Entity entity={pendingEntity} isGhost={true} isPendingMove={true} />
                             </foreignObject>
                           </g>
                         );

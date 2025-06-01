@@ -100,6 +100,7 @@ const Entity: React.FC<EntityProps> = ({
       {entity.entityType.type === "archer" && "🏹"}
       {entity.entityType.type === "cavalry" && "🐎"}
       {entity.entityType.type === "infantry" && "⚔️"}
+      {entity.entityType.type === "mage" && "🧙‍♂️"}
     </Box>
   );
 };

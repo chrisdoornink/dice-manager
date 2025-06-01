@@ -26,7 +26,7 @@ export interface TerrainDefinition {
 }
 
 // Define player entity types
-export type PlayerUnitType = "archer" | "cavalry" | "infantry";
+export type PlayerUnitType = "archer" | "cavalry" | "infantry" | "mage";
 
 // Define enemy entity types
 export type EnemyUnitType = "clobbin" | "spettle" | "skritcher" | "whumble";
