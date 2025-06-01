@@ -31,9 +31,11 @@ const Entity: React.FC<EntityProps> = ({
 }) => {
   // Determine the appropriate styling based on the entity state
   const getFilter = () => {
-    if (isSelected) return "drop-shadow(0 0 3px #ffffff)";
-    if (isPendingMove) return "drop-shadow(0 0 3px #FFA500)";
-    return "none";
+    if (isSelected) return "drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 1px #000000)";
+    if (isPendingMove) return "drop-shadow(0 0 3px #FFA500) drop-shadow(0 0 1px #000000)";
+    if (entity.isEnemy) return "drop-shadow(0 0 5px rgba(239, 0, 0, 0.7))";
+    return "drop-shadow(0 0 4px rgba(183, 235, 253, 0.9))";
+    // return "none";
   };
 
   // Render using the sprite sheet if available
@@ -64,7 +66,7 @@ const Entity: React.FC<EntityProps> = ({
             backgroundPosition: `-${entity.entityType.spriteSheetSprite.x}px -${entity.entityType.spriteSheetSprite.y}px`,
             backgroundSize: "256px 256px",
             backgroundRepeat: "no-repeat",
-            transform: !entity.isEnemy ? "scale(1.3)" : "scale(1.5)", // Player sprites need to be shifted up
+            transform: !entity.isEnemy ? "scale(1.3)" : "scale(1.4)", // Player sprites need to be shifted up
             transformOrigin: "center bottom", // Scale from bottom center to keep feet in position
             top: !entity.isEnemy ? "8px" : "0", // Move player sprites up even more
           }}

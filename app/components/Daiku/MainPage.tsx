@@ -363,12 +363,15 @@ const MainPage = () => {
     //   return `${position.terrain.color}80`;
     // }
 
+    if (position.terrain.type === "water") return "#5DA9E9";
+
     // Check if hexagon is in movement range
     if (
       selectedEntity &&
       movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
     ) {
-      return `${position.terrain.color}90`; // Terrain color with 90% opacity for movement range
+      if (position.terrain.type === "grass") return "#CEFFA0";
+      return `${position.terrain.color}60`; // Terrain color with 50% opacity for movement range
     }
 
     // Check if hexagon is a highlighted neighbor
@@ -565,34 +568,14 @@ const MainPage = () => {
                   {/* Define the hexagon shape with a stroke */}
                   <polygon
                     points={hexagonPoints}
-                    fill={
-                      position.terrain.type === "water"
-                        ? "#5DA9E9"
-                        : position.terrain.type === "grass"
-                        ? "#7EC850"
-                        : getHexagonFillColor(position)
-                    }
+                    fill={getHexagonFillColor(position)}
                     fillOpacity={
                       position.terrain.type === "water" || position.terrain.type === "grass"
                         ? "0.6"
                         : "1"
                     }
-                    strokeWidth={
-                      selectedEntity &&
-                      movementRangeHexagons.some(
-                        (pos) => pos.q === position.q && pos.r === position.r
-                      )
-                        ? "2"
-                        : "4"
-                    }
-                    stroke={
-                      selectedEntity &&
-                      movementRangeHexagons.some(
-                        (pos) => pos.q === position.q && pos.r === position.r
-                      )
-                        ? "#ffffff"
-                        : "#374d22"
-                    }
+                    strokeWidth="4"
+                    stroke="#374d22"
                   />
 
                   {/* Render forest sprites from sprite sheet - simpler method */}

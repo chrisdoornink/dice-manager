@@ -7,7 +7,7 @@ export const playerUnitTypes = {
     color: "#FF5252", // Red
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 114, // Third sprite in first row (0-indexed)
+      x: 117, // Third sprite in first row (0-indexed)
       y: 0, // First row
       width: 64,
       height: 94,
