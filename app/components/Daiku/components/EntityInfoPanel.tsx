@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { PlayerEntity } from "../utils/types";
+import Entity from "./Entity";
 
 // Component for displaying selected entity info
 export const EntityInfoPanel = ({ selectedEntity }: { selectedEntity: PlayerEntity | null }) => {
@@ -24,23 +25,14 @@ export const EntityInfoPanel = ({ selectedEntity }: { selectedEntity: PlayerEnti
       <Box sx={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
         <Box
           sx={{
-            width: "30px",
-            height: "30px",
-            borderRadius: "50%",
-            backgroundColor: selectedEntity.entityType.color,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: selectedEntity.entityType.spriteSheetSprite?.width,
+            height: "120px",
             marginRight: "10px",
+            position: "relative",
+            overflow: "visible",
           }}
         >
-          {selectedEntity.entityType.type === "archer"
-            ? "🏹"
-            : selectedEntity.entityType.type === "cavalry"
-            ? "🐎"
-            : selectedEntity.entityType.type === "infantry"
-            ? "⚔️"
-            : ""}
+          <Entity entity={selectedEntity} style={{ transform: "scale(0.5)" }} />
         </Box>
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", textTransform: "capitalize" }}>

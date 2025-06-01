@@ -47,7 +47,7 @@ const Entity: React.FC<EntityProps> = ({
           if (onClick) onClick(entity);
         }}
         sx={{
-          width: "100%",
+          width: entity.entityType.spriteSheetSprite?.width,
           height: "100%",
           cursor: onClick ? "pointer" : "default",
           position: "relative",

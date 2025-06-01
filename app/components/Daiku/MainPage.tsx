@@ -98,6 +98,8 @@ const MainPage = () => {
 
   // Track pending moves for the current turn
   const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [errorMessageTimeout, setErrorMessageTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const [allGridPositions, setAllGridPositions] = useState<GridPosition[]>([]);
 
@@ -274,9 +276,56 @@ const MainPage = () => {
   // Handle tile selection for movement/attack
   const handleTileSelection = (targetPosition: HexagonData) => {
     if (!selectedEntity) return;
+    
+    // Check if the target position will be occupied after all pending moves
+    const willBeOccupied = () => {
+      // Get all entities (both player and enemy)
+      const allEntities = [...playerEntities, ...enemyEntities];
 
-    // Check if there's an enemy at the target position (not implemented yet)
-    const hasEnemy = false; // This will need to be updated when enemies are added
+      // First, check if any entity without a pending move will be at the target position
+      const entityAtTarget = allEntities.find(entity => {
+        // Skip the currently selected entity since it's moving
+        if (entity.id === selectedEntity.id) return false;
+
+        // If this entity has a pending move, skip it (its current position will be vacated)
+        if (pendingMoves.has(entity.id)) return false;
+
+        // Check if this entity's position matches the target position
+        return entity.position.q === targetPosition.q && 
+               entity.position.r === targetPosition.r;
+      });
+
+      if (entityAtTarget) return true;
+
+      // Next, check if any other entity has a pending move to this same position
+      const pendingMoveToTarget = Array.from(pendingMoves.entries()).some(([entityId, position]) => {
+        // Skip the currently selected entity
+        if (entityId === selectedEntity.id) return false;
+        
+        return position.q === targetPosition.q && position.r === targetPosition.r;
+      });
+
+      return pendingMoveToTarget;
+    };
+
+    // Don't allow moving to an occupied position
+    if (willBeOccupied()) {
+      // Clear any existing timeout
+      if (errorMessageTimeout) {
+        clearTimeout(errorMessageTimeout);
+      }
+      
+      // Set error message
+      setErrorMessage("Cannot move to an occupied position");
+      
+      // Clear the message after 2 seconds
+      const timeout = setTimeout(() => {
+        setErrorMessage("");
+      }, 2000);
+      
+      setErrorMessageTimeout(timeout);
+      return;
+    }
 
     // Add to pending moves instead of immediately moving
     const newPendingMoves = new Map(pendingMoves);
@@ -746,6 +795,31 @@ const MainPage = () => {
         </Box>
       )}
 
+      {/* Error message display */}
+      {errorMessage && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#f44336",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "4px",
+            zIndex: 1100,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            animation: "fadeIn 0.3s",
+            "@keyframes fadeIn": {
+              "0%": { opacity: 0, transform: "translateX(-50%) translateY(-20px)" },
+              "100%": { opacity: 1, transform: "translateX(-50%) translateY(0)" },
+            },
+          }}
+        >
+          {errorMessage}
+        </Box>
+      )}
+      
       {/* Sprite Debug Modal */}
       <SpriteDebugModal
         open={spriteDebugModalOpen}
