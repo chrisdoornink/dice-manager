@@ -269,14 +269,36 @@ const MainPage = () => {
     }
   }, [allGridPositions, initializeNewGame]);
 
-  // Use custom hook to animate hexagons appearing one by one
-  const visibleHexagons = useHexagonAnimation({
+  // Use a state to track if the grid has been initialized
+  const [gridInitialized, setGridInitialized] = useState(false);
+  
+  // Use the animation hook only for initial grid setup
+  const animatedHexagons = useHexagonAnimation({
     allGridPositions,
     animationDelay: ANIMATION_DELAY,
     terrainMap,
     defaultTerrain: TERRAIN_TYPES.grass,
-    playerEntities,
+    playerEntities: [], // Remove dependency on playerEntities to prevent re-animations
   });
+  
+  // Create a static grid representation for subsequent renders
+  const staticHexagons = React.useMemo(() => {
+    return allGridPositions.map(pos => {
+      const posKey = `${pos.q},${pos.r}`;
+      const terrain = terrainMap.get(posKey) || TERRAIN_TYPES.grass;
+      return { q: pos.q, r: pos.r, terrain };
+    });
+  }, [allGridPositions, terrainMap]);
+  
+  // Only use animation on initial load, not for every state update
+  const visibleHexagons = React.useMemo(() => {
+    // Once we've seen the animation once, use static grid for all future renders
+    if (animatedHexagons.length === allGridPositions.length && !gridInitialized) {
+      setGridInitialized(true);
+    }
+    
+    return gridInitialized ? staticHexagons : animatedHexagons;
+  }, [animatedHexagons, staticHexagons, allGridPositions.length, gridInitialized]);
 
   const hexagonPoints = generateHexPoints();
 
