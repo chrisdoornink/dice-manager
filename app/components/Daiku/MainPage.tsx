@@ -11,6 +11,7 @@ import {
   HexagonData,
 } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
+import useEnemyAI from "./hooks/useEnemyAI";
 import Entity from "./components/Entity";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
@@ -100,6 +101,13 @@ const MainPage = () => {
   const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [errorMessageTimeout, setErrorMessageTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Enemy turn tracking
+  const [isEnemyTurn, setIsEnemyTurn] = useState(false);
+  const [enemyPendingMoves, setEnemyPendingMoves] = useState<Map<string, GridPosition>>(new Map());
+  
+  // Access the enemy AI hook
+  const { calculateEnemyMoves } = useEnemyAI();
 
   const [allGridPositions, setAllGridPositions] = useState<GridPosition[]>([]);
 
@@ -276,14 +284,14 @@ const MainPage = () => {
   // Handle tile selection for movement/attack
   const handleTileSelection = (targetPosition: HexagonData) => {
     if (!selectedEntity) return;
-    
+
     // Check if the target position will be occupied after all pending moves
     const willBeOccupied = () => {
       // Get all entities (both player and enemy)
       const allEntities = [...playerEntities, ...enemyEntities];
 
       // First, check if any entity without a pending move will be at the target position
-      const entityAtTarget = allEntities.find(entity => {
+      const entityAtTarget = allEntities.find((entity) => {
         // Skip the currently selected entity since it's moving
         if (entity.id === selectedEntity.id) return false;
 
@@ -291,19 +299,20 @@ const MainPage = () => {
         if (pendingMoves.has(entity.id)) return false;
 
         // Check if this entity's position matches the target position
-        return entity.position.q === targetPosition.q && 
-               entity.position.r === targetPosition.r;
+        return entity.position.q === targetPosition.q && entity.position.r === targetPosition.r;
       });
 
       if (entityAtTarget) return true;
 
       // Next, check if any other entity has a pending move to this same position
-      const pendingMoveToTarget = Array.from(pendingMoves.entries()).some(([entityId, position]) => {
-        // Skip the currently selected entity
-        if (entityId === selectedEntity.id) return false;
-        
-        return position.q === targetPosition.q && position.r === targetPosition.r;
-      });
+      const pendingMoveToTarget = Array.from(pendingMoves.entries()).some(
+        ([entityId, position]) => {
+          // Skip the currently selected entity
+          if (entityId === selectedEntity.id) return false;
+
+          return position.q === targetPosition.q && position.r === targetPosition.r;
+        }
+      );
 
       return pendingMoveToTarget;
     };
@@ -314,15 +323,15 @@ const MainPage = () => {
       if (errorMessageTimeout) {
         clearTimeout(errorMessageTimeout);
       }
-      
+
       // Set error message
       setErrorMessage("Cannot move to an occupied position");
-      
+
       // Clear the message after 2 seconds
       const timeout = setTimeout(() => {
         setErrorMessage("");
       }, 2000);
-      
+
       setErrorMessageTimeout(timeout);
       return;
     }
@@ -340,31 +349,96 @@ const MainPage = () => {
 
   // Execute all pending moves and advance turn
   const executeMoves = () => {
-    if (pendingMoves.size === 0) return;
+    if (pendingMoves.size === 0 && !isEnemyTurn) return;
 
-    // Apply all pending moves to entities
-    const updatedEntities = playerEntities.map((entity) => {
-      const pendingMove = pendingMoves.get(entity.id);
-      if (pendingMove) {
-        return {
-          ...entity,
-          position: pendingMove,
-        };
-      }
-      return entity;
-    });
+    if (!isEnemyTurn) {
+      // Player turn - apply all pending moves to player entities
+      const updatedPlayerEntities = playerEntities.map((entity) => {
+        const pendingMove = pendingMoves.get(entity.id);
+        if (pendingMove) {
+          return {
+            ...entity,
+            position: pendingMove,
+          };
+        }
+        return entity;
+      });
 
-    // Update state
-    const nextTurn = currentTurn + 1;
-    setPlayerEntities(updatedEntities);
-    setPendingMoves(new Map());
-    setCurrentTurn(nextTurn);
+      // Update player entities and clear pending moves
+      setPlayerEntities(updatedPlayerEntities);
+      setPendingMoves(new Map());
+      
+      // Start enemy turn
+      setIsEnemyTurn(true);
+      
+      // Calculate enemy moves based on updated player positions
+      // We already have terrainMap with all terrain definitions
+      
+      // Convert player entities to player positions for AI calculations
+      const playerPositions = updatedPlayerEntities.map(player => player.position);
+      
+      // Generate enemy moves using the enemy AI hook
+      const enemyMoves = calculateEnemyMoves(
+        enemyEntities,
+        playerPositions,
+        terrainMap
+      );
+      
+      // Set enemy pending moves
+      setEnemyPendingMoves(enemyMoves);
+      
+      // Allow a delay to show it's the enemy's turn before executing their moves
+      setTimeout(() => {
+        // Execute enemy moves
+        const updatedEnemyEntities = enemyEntities.map((entity) => {
+          const enemyMove = enemyMoves.get(entity.id);
+          if (enemyMove) {
+            return {
+              ...entity,
+              position: enemyMove,
+            };
+          }
+          return entity;
+        });
+        
+        // Update enemy entities
+        setEnemyEntities(updatedEnemyEntities);
+        setEnemyPendingMoves(new Map());
+        
+        // End enemy turn, back to player turn
+        setIsEnemyTurn(false);
+        
+        // Advance to next turn
+        setCurrentTurn(currentTurn + 1);
+      }, 1500); // 1.5 second delay for visual feedback
+    }
+    else {
+      // This case is unlikely to happen as we handle enemy moves within the player turn
+      // but it's here for completeness
+      const updatedEnemyEntities = enemyEntities.map((entity) => {
+        const enemyMove = enemyPendingMoves.get(entity.id);
+        if (enemyMove) {
+          return {
+            ...entity,
+            position: enemyMove,
+          };
+        }
+        return entity;
+      });
+      
+      setEnemyEntities(updatedEnemyEntities);
+      setEnemyPendingMoves(new Map());
+      setIsEnemyTurn(false);
+      
+      // Advance to next turn
+      setCurrentTurn(currentTurn + 1);
+    }
 
     // Save game state after moves are executed
     saveGameState({
       terrainMap: terrainMapToArray(terrainMap),
-      playerEntities: updatedEntities,
-      currentTurn: nextTurn,
+      playerEntities: playerEntities,
+      currentTurn: currentTurn + 1,
       gameStartedAt: loadGameState()?.gameStartedAt || Date.now(),
       lastSavedAt: Date.now(),
       enemyEntities: enemyEntities,
@@ -777,21 +851,42 @@ const MainPage = () => {
             zIndex: 1000,
           }}
         >
-          <button
-            onClick={executeMoves}
-            style={{
-              padding: "10px 20px",
-              fontSize: "18px",
-              backgroundColor: "#4caf50",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-            }}
-          >
-            End Turn ({pendingMoves.size})
-          </button>
+          <Box sx={{ position: "fixed", bottom: "20px", right: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+            {isEnemyTurn && (
+              <Box sx={{ 
+                backgroundColor: "rgba(244, 67, 54, 0.8)", 
+                color: "white", 
+                padding: "8px 16px", 
+                borderRadius: "4px",
+                marginRight: "10px",
+                animation: "pulse 1.5s infinite",
+                "@keyframes pulse": {
+                  "0%": { opacity: 0.7 },
+                  "50%": { opacity: 1 },
+                  "100%": { opacity: 0.7 }
+                }
+              }}>
+                Enemy Turn
+              </Box>
+            )}
+            {!isEnemyTurn && pendingMoves.size > 0 && (
+              <button
+                onClick={executeMoves}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "18px",
+                  backgroundColor: "#4caf50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                }}
+              >
+                Execute Moves ({pendingMoves.size})
+              </button>
+            )}
+          </Box>
         </Box>
       )}
 
@@ -819,7 +914,7 @@ const MainPage = () => {
           {errorMessage}
         </Box>
       )}
-      
+
       {/* Sprite Debug Modal */}
       <SpriteDebugModal
         open={spriteDebugModalOpen}
