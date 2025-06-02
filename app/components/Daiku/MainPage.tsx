@@ -101,11 +101,11 @@ const MainPage = () => {
   const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [errorMessageTimeout, setErrorMessageTimeout] = useState<NodeJS.Timeout | null>(null);
-  
+
   // Enemy turn tracking
   const [isEnemyTurn, setIsEnemyTurn] = useState(false);
   const [enemyPendingMoves, setEnemyPendingMoves] = useState<Map<string, GridPosition>>(new Map());
-  
+
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
 
@@ -271,7 +271,7 @@ const MainPage = () => {
 
   // Use a state to track if the grid has been initialized
   const [gridInitialized, setGridInitialized] = useState(false);
-  
+
   // Use the animation hook only for initial grid setup
   const animatedHexagons = useHexagonAnimation({
     allGridPositions,
@@ -280,23 +280,23 @@ const MainPage = () => {
     defaultTerrain: TERRAIN_TYPES.grass,
     playerEntities: [], // Remove dependency on playerEntities to prevent re-animations
   });
-  
+
   // Create a static grid representation for subsequent renders
   const staticHexagons = React.useMemo(() => {
-    return allGridPositions.map(pos => {
+    return allGridPositions.map((pos) => {
       const posKey = `${pos.q},${pos.r}`;
       const terrain = terrainMap.get(posKey) || TERRAIN_TYPES.grass;
-      return { q: pos.q, r: pos.r, terrain };
+      return { q: pos.q, r: pos.r, terrain } as HexagonData;
     });
   }, [allGridPositions, terrainMap]);
-  
+
   // Only use animation on initial load, not for every state update
   const visibleHexagons = React.useMemo(() => {
     // Once we've seen the animation once, use static grid for all future renders
     if (animatedHexagons.length === allGridPositions.length && !gridInitialized) {
       setGridInitialized(true);
     }
-    
+
     return gridInitialized ? staticHexagons : animatedHexagons;
   }, [animatedHexagons, staticHexagons, allGridPositions.length, gridInitialized]);
 
@@ -389,26 +389,22 @@ const MainPage = () => {
       // Update player entities and clear pending moves
       setPlayerEntities(updatedPlayerEntities);
       setPendingMoves(new Map());
-      
+
       // Start enemy turn
       setIsEnemyTurn(true);
-      
+
       // Calculate enemy moves based on updated player positions
       // We already have terrainMap with all terrain definitions
-      
+
       // Convert player entities to player positions for AI calculations
-      const playerPositions = updatedPlayerEntities.map(player => player.position);
-      
+      const playerPositions = updatedPlayerEntities.map((player) => player.position);
+
       // Generate enemy moves using the enemy AI hook
-      const enemyMoves = calculateEnemyMoves(
-        enemyEntities,
-        playerPositions,
-        terrainMap
-      );
-      
+      const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap);
+
       // Set enemy pending moves
       setEnemyPendingMoves(enemyMoves);
-      
+
       // Allow a delay to show it's the enemy's turn before executing their moves
       setTimeout(() => {
         // Execute enemy moves
@@ -422,19 +418,18 @@ const MainPage = () => {
           }
           return entity;
         });
-        
+
         // Update enemy entities
         setEnemyEntities(updatedEnemyEntities);
         setEnemyPendingMoves(new Map());
-        
+
         // End enemy turn, back to player turn
         setIsEnemyTurn(false);
-        
+
         // Advance to next turn
         setCurrentTurn(currentTurn + 1);
       }, 1500); // 1.5 second delay for visual feedback
-    }
-    else {
+    } else {
       // This case is unlikely to happen as we handle enemy moves within the player turn
       // but it's here for completeness
       const updatedEnemyEntities = enemyEntities.map((entity) => {
@@ -447,11 +442,11 @@ const MainPage = () => {
         }
         return entity;
       });
-      
+
       setEnemyEntities(updatedEnemyEntities);
       setEnemyPendingMoves(new Map());
       setIsEnemyTurn(false);
-      
+
       // Advance to next turn
       setCurrentTurn(currentTurn + 1);
     }
@@ -873,21 +868,32 @@ const MainPage = () => {
             zIndex: 1000,
           }}
         >
-          <Box sx={{ position: "fixed", bottom: "20px", right: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: "20px",
+              right: "20px",
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
             {isEnemyTurn && (
-              <Box sx={{ 
-                backgroundColor: "rgba(244, 67, 54, 0.8)", 
-                color: "white", 
-                padding: "8px 16px", 
-                borderRadius: "4px",
-                marginRight: "10px",
-                animation: "pulse 1.5s infinite",
-                "@keyframes pulse": {
-                  "0%": { opacity: 0.7 },
-                  "50%": { opacity: 1 },
-                  "100%": { opacity: 0.7 }
-                }
-              }}>
+              <Box
+                sx={{
+                  backgroundColor: "rgba(244, 67, 54, 0.8)",
+                  color: "white",
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  marginRight: "10px",
+                  animation: "pulse 1.5s infinite",
+                  "@keyframes pulse": {
+                    "0%": { opacity: 0.7 },
+                    "50%": { opacity: 1 },
+                    "100%": { opacity: 0.7 },
+                  },
+                }}
+              >
                 Enemy Turn
               </Box>
             )}

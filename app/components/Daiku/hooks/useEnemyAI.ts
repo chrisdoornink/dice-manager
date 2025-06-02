@@ -37,7 +37,8 @@ const getValidNeighbors = (
   position: GridPosition,
   terrainMap: TerrainMap,
   enemies: EnemyEntity[],
-  pendingEnemyMoves: Map<string, GridPosition>
+  pendingEnemyMoves: Map<string, GridPosition>,
+  playerPositions: GridPosition[] = []
 ): GridPosition[] => {
   // Hexagon neighbor directions (q, r)
   const directions = [
@@ -55,6 +56,13 @@ const getValidNeighbors = (
       // Check if position is valid (has terrain and not water)
       const terrain = terrainMap.get(`${newPos.q},${newPos.r}`);
       if (!terrain || terrain.type === 'water') return null;
+
+      // Check if position is occupied by a player
+      const isPlayerOccupied = playerPositions.some(
+        player => player.q === newPos.q && player.r === newPos.r
+      );
+
+      if (isPlayerOccupied) return null;
 
       // Check if position won't be occupied by other enemies
       const willBeOccupied = enemies.some(enemy => {
@@ -112,7 +120,7 @@ const useEnemyAI = () => {
     if (nearestPlayer.distance <= 1) return enemy.position;
 
     // Get valid neighboring positions
-    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves);
+    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves, playerPositions);
     if (neighbors.length === 0) return null;
 
     // Find the neighbor that gets us closest to the nearest player
@@ -150,7 +158,7 @@ const useEnemyAI = () => {
     if (nearestPlayer.distance >= 4) return enemy.position;
 
     // Get valid neighboring positions
-    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves);
+    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves, playerPositions);
     if (neighbors.length === 0) return null;
 
     // Find the neighbor that gets us furthest from the nearest player
@@ -185,7 +193,7 @@ const useEnemyAI = () => {
     }, { position: playerPositions[0], distance: Infinity });
 
     // Get valid neighboring positions
-    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves);
+    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves, playerPositions);
     if (neighbors.length === 0) return null;
 
     // For flanking, we want to maintain a medium distance (not too close, not too far)
@@ -230,12 +238,13 @@ const useEnemyAI = () => {
    */
   const getRandomMove = (
     enemy: EnemyEntity,
+    playerPositions: GridPosition[],
     terrainMap: TerrainMap,
     enemies: EnemyEntity[],
     pendingEnemyMoves: Map<string, GridPosition>
   ): GridPosition | null => {
     // Get valid neighboring positions
-    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves);
+    const neighbors = getValidNeighbors(enemy.position, terrainMap, enemies, pendingEnemyMoves, playerPositions);
     if (neighbors.length === 0) return null;
 
     // Pick a random valid position
@@ -290,7 +299,7 @@ const useEnemyAI = () => {
           targetPosition = getFlankingMove(enemy, playerPositions, terrainMap, enemies, enemyMoves);
           break;
         case "random":
-          targetPosition = getRandomMove(enemy, terrainMap, enemies, enemyMoves);
+          targetPosition = getRandomMove(enemy, playerPositions, terrainMap, enemies, enemyMoves);
           break;
         case "stationary":
           targetPosition = getStationaryMove(enemy);
