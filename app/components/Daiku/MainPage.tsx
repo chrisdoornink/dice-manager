@@ -67,8 +67,14 @@ const MainPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // take into account the 10% header and   10% footer
+  const calculatedWindowDimensions = {
+    width: windowDimensions.width * 0.8,
+    height: windowDimensions.height * 0.8,
+  };
+
   const [hexSize, hexWidth, hexHeight] = useHexagonSize({
-    windowDimensions,
+    windowDimensions: calculatedWindowDimensions,
   });
 
   // Pre-generate a terrain map to ensure connectivity
@@ -528,34 +534,46 @@ const MainPage = () => {
       maxWidth={false}
       sx={{
         minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        justifyContent: "space-between",
         alignItems: "center",
-        px: { xs: 2, sm: 4 },
-        py: { xs: 2, sm: 4 },
+        padding: 0,
+        overflow: "hidden",
+        backgroundColor: "#f5f5f5",
       }}
     >
+      {/* Header Section - 80px height */}
       <Box
         sx={{
           position: "relative",
           width: "100%",
-          height: "100vh",
-          maxHeight: "100vh",
+          height: "80px",
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
         }}
       >
+        {/* Turn indicator */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            zIndex: 1000,
+            backgroundColor: "rgba(255, 255, 255, 0.7)",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            fontWeight: "bold",
+          }}
+        >
+          Turn: {currentTurn}
+        </Box>
         {/* Reset and Debug buttons */}
         <Box
           sx={{
             display: "flex",
-            gap: 2,
-            position: "absolute",
-            top: "20px",
-            left: "20px",
-            zIndex: 1000,
+            paddingRight: "200px",
           }}
         >
           <ResetButton onReset={handleReset} />
@@ -579,27 +597,52 @@ const MainPage = () => {
           </button>
         </Box>
 
-        {/* Turn indicator */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 1000,
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            padding: "5px 10px",
-            borderRadius: "4px",
-            fontWeight: "bold",
-          }}
-        >
-          Turn: {currentTurn}
-        </Box>
+        {/* Error message display */}
+        {errorMessage && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: "20px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "#f44336",
+              color: "white",
+              padding: "10px 20px",
+              borderRadius: "4px",
+              zIndex: 1100,
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+              animation: "fadeIn 0.3s",
+              "@keyframes fadeIn": {
+                "0%": { opacity: 0, transform: "translateX(-50%) translateY(-20px)" },
+                "100%": { opacity: 1, transform: "translateX(-50%) translateY(0)" },
+              },
+            }}
+          >
+            {errorMessage}
+          </Box>
+        )}
+      </Box>
+      {/* Main Game Board Section */}
+      <Box
+        data-testid="the-board"
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "calc(100vh - 160px)", // Middle portion, leaving 80px for header and footer
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexGrow: 1,
+          overflow: "hidden", // Prevent content from spilling outside
+          boxSizing: "border-box",
+          padding: "10px", // Add some internal padding
+        }}
+      >
         {/* Display selected entity info panel */}
         <EntityInfoPanel selectedEntity={selectedEntity} />
 
         {/* Render all visible hexagons */}
         {visibleHexagons.map((position, index) => {
-          console.log("position", position);
           // Convert axial coordinates to pixel coordinates for flat-topped hexagons
           // Formula for flat-top hexagons in axial coordinates
           // The spacing factor controls how close hexagons are packed
@@ -615,20 +658,17 @@ const MainPage = () => {
           // Invert y-position to make positive r go upward
           const yPositionInverted = -yPosition;
 
-          console.log(position.terrain.type);
-
-          if (position.terrain.type === "water") {
-            console.log("Water tile at", position.q, position.r);
-          }
-
           return (
             <Fade key={`${position.q}-${position.r}-${index}`} in={true} timeout={200}>
               <Box
+                data-testid="the-hexagon"
                 sx={{
                   position: "absolute",
                   left: `calc(50% + ${xPosition}px)`,
                   top: `calc(50% + ${yPositionInverted}px)`,
                   transform: "translate(-50%, -50%)",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
                   cursor:
                     selectedEntity &&
                     movementRangeHexagons.some(
@@ -857,91 +897,57 @@ const MainPage = () => {
         })}
       </Box>
 
-      {/* Execute moves button */}
-      {pendingMoves.size > 0 && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: "20px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-          }}
-        >
+      {/* Footer Section - 80px height */}
+      <Box
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "80px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* Enemy Turn Notification */}
+        {isEnemyTurn && (
           <Box
             sx={{
-              position: "fixed",
-              bottom: "20px",
-              right: "20px",
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
+              backgroundColor: "rgba(244, 67, 54, 0.8)",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              marginRight: "10px",
+              animation: "pulse 1.5s infinite",
+              "@keyframes pulse": {
+                "0%": { opacity: 0.7 },
+                "50%": { opacity: 1 },
+                "100%": { opacity: 0.7 },
+              },
             }}
           >
-            {isEnemyTurn && (
-              <Box
-                sx={{
-                  backgroundColor: "rgba(244, 67, 54, 0.8)",
-                  color: "white",
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  marginRight: "10px",
-                  animation: "pulse 1.5s infinite",
-                  "@keyframes pulse": {
-                    "0%": { opacity: 0.7 },
-                    "50%": { opacity: 1 },
-                    "100%": { opacity: 0.7 },
-                  },
-                }}
-              >
-                Enemy Turn
-              </Box>
-            )}
-            {!isEnemyTurn && pendingMoves.size > 0 && (
-              <button
-                onClick={executeMoves}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: "18px",
-                  backgroundColor: "#4caf50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                }}
-              >
-                Execute Moves ({pendingMoves.size})
-              </button>
-            )}
+            Enemy Turn
           </Box>
-        </Box>
-      )}
+        )}
 
-      {/* Error message display */}
-      {errorMessage && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: "20px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#f44336",
-            color: "white",
-            padding: "10px 20px",
-            borderRadius: "4px",
-            zIndex: 1100,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-            animation: "fadeIn 0.3s",
-            "@keyframes fadeIn": {
-              "0%": { opacity: 0, transform: "translateX(-50%) translateY(-20px)" },
-              "100%": { opacity: 1, transform: "translateX(-50%) translateY(0)" },
-            },
-          }}
-        >
-          {errorMessage}
-        </Box>
-      )}
+        {/* Execute Moves Button */}
+        {!isEnemyTurn && pendingMoves.size > 0 && (
+          <button
+            onClick={executeMoves}
+            style={{
+              padding: "10px 20px",
+              fontSize: "18px",
+              backgroundColor: "#4caf50",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            }}
+          >
+            Execute Moves ({pendingMoves.size})
+          </button>
+        )}
+      </Box>
 
       {/* Sprite Debug Modal */}
       <SpriteDebugModal

@@ -16,7 +16,7 @@ export const useHexagonSize = ({
     const safetyFactor = 0.85; // Use 85% of the available space
     // Account for mobile vs desktop - use more aggressive scaling on smaller screens
     const isMobile = windowDimensions.width < 768;
-    const mobileFactor = isMobile ? 0.95 : 0.85;
+    const mobileFactor = isMobile ? 0.85 : 0.85;
     const availableWidth = windowDimensions.width * mobileFactor;
     const availableHeight = windowDimensions.height * mobileFactor;
 
