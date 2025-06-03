@@ -1,27 +1,60 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton, Collapse } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import CloseIcon from "@mui/icons-material/Close";
 import { PlayerEntity } from "../utils/types";
 import Entity from "./Entity";
 
 // Component for displaying selected entity info
 export const EntityInfoPanel = ({ selectedEntity }: { selectedEntity: PlayerEntity | null }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Toggle panel visibility
+  const togglePanel = () => setIsOpen(!isOpen);
+  
   if (!selectedEntity) return null;
 
   return (
     <Box
       sx={{
-        position: "absolute",
-        top: "20px",
-        right: "20px",
-        width: "250px",
-        backgroundColor: "rgba(0,0,0,0.7)",
-        color: "white",
-        padding: "15px",
-        borderRadius: "5px",
+        position: "relative",
+        display: "inline-block",
         zIndex: 1000,
-        boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
       }}
     >
+      {/* Info icon toggle button */}
+      <IconButton 
+        onClick={togglePanel}
+        sx={{
+          backgroundColor: "rgba(0,0,0,0.7)",
+          color: "white",
+          '&:hover': {
+            backgroundColor: "rgba(0,0,0,0.8)",
+          },
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        }}
+      >
+        {isOpen ? <CloseIcon /> : <InfoIcon />}
+      </IconButton>
+      
+      {/* Collapsible panel */}
+      <Collapse in={isOpen} timeout={300}>
+        <Box
+          sx={{
+            position: "absolute",
+            width: "250px",
+            backgroundColor: "rgba(0,0,0,0.7)",
+            color: "white",
+            padding: "15px",
+            borderRadius: "5px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            right: 0,
+            top: "45px", // Position below the header
+            zIndex: 1100,
+            maxHeight: "calc(100vh - 150px)", // Ensure it doesn't exceed viewport height
+            overflowY: "auto", // Add scrolling if content is too tall
+          }}
+        >
       <Box sx={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
         <Box
           sx={{
@@ -67,6 +100,8 @@ export const EntityInfoPanel = ({ selectedEntity }: { selectedEntity: PlayerEnti
           );
         })}
       </Box>
+        </Box>
+      </Collapse>
     </Box>
   );
 };

@@ -552,28 +552,32 @@ const MainPage = () => {
           height: "80px",
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        {/* Turn indicator */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 1000,
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            padding: "5px 10px",
-            borderRadius: "4px",
-            fontWeight: "bold",
-          }}
-        >
-          Turn: {currentTurn}
+        {/* Turn indicator moved to left side */}
+        {/* Left side - Turn indicator */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          {/* Turn indicator */}
+          <Box
+            sx={{
+              marginLeft: "10px",
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              padding: "5px 10px",
+              borderRadius: "4px",
+              fontWeight: "bold",
+            }}
+          >
+            Turn: {currentTurn}
+          </Box>
         </Box>
-        {/* Reset and Debug buttons */}
+
+        {/* Center - Reset and Debug buttons */}
         <Box
           sx={{
             display: "flex",
-            paddingRight: "200px",
+            alignItems: "center",
+            gap: "15px",
           }}
         >
           <ResetButton onReset={handleReset} />
@@ -595,6 +599,11 @@ const MainPage = () => {
           >
             Debug Sprites
           </button>
+        </Box>
+
+        {/* Right side - Entity Info Panel */}
+        <Box sx={{ marginRight: "20px" }}>
+          <EntityInfoPanel selectedEntity={selectedEntity} />
         </Box>
 
         {/* Error message display */}
@@ -636,8 +645,7 @@ const MainPage = () => {
           boxSizing: "border-box",
         }}
       >
-        {/* Display selected entity info panel */}
-        <EntityInfoPanel selectedEntity={selectedEntity} />
+        {/* Entity info panel moved to header */}
 
         {/* Render all visible hexagons */}
         {visibleHexagons.map((position, index) => {
