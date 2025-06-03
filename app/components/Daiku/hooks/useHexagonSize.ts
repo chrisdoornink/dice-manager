@@ -15,10 +15,8 @@ export const useHexagonSize = ({
     // Apply safety margins for container padding
     const safetyFactor = 0.85; // Use 85% of the available space
     // Account for mobile vs desktop - use more aggressive scaling on smaller screens
-    const isMobile = windowDimensions.width < 768;
-    const mobileFactor = isMobile ? 0.85 : 0.85;
-    const availableWidth = windowDimensions.width * mobileFactor;
-    const availableHeight = windowDimensions.height * mobileFactor;
+    const availableWidth = windowDimensions.width;
+    const availableHeight = windowDimensions.height;
 
     // Calculate size constraints based on logical dimensions
     // For horizontal constraint: we need 1.5*q hexagons to fit in width (due to overlapping)

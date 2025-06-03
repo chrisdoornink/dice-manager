@@ -541,7 +541,7 @@ const MainPage = () => {
         alignItems: "center",
         padding: 0,
         overflow: "hidden",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#5C4E45",
       }}
     >
       {/* Header Section - 80px height */}
@@ -633,9 +633,7 @@ const MainPage = () => {
           justifyContent: "center",
           alignItems: "center",
           flexGrow: 1,
-          overflow: "hidden", // Prevent content from spilling outside
           boxSizing: "border-box",
-          padding: "10px", // Add some internal padding
         }}
       >
         {/* Display selected entity info panel */}
@@ -754,7 +752,7 @@ const MainPage = () => {
                         ? "0.6"
                         : "1"
                     }
-                    strokeWidth="4"
+                    strokeWidth="3"
                     stroke="#374d22"
                   />
 
