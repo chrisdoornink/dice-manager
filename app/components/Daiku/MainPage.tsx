@@ -529,8 +529,11 @@ const MainPage = () => {
       selectedEntity &&
       movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
     ) {
+      // Make all terrain types lighter when highlighted in movement range
       if (position.terrain.type === "grass") return "#CEFFA0";
-      return `${position.terrain.color}60`; // Terrain color with 50% opacity for movement range
+      if (position.terrain.type === "forest") return "#A3D682"; // Lighter green for forest
+      if (position.terrain.type === "mountain") return "#B8E6B8"; // Lighter green for mountain
+      return `${position.terrain.color}80`; // 80% opacity as fallback for other terrain types
     }
 
     // Check if hexagon is a highlighted neighbor
