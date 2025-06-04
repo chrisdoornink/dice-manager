@@ -529,8 +529,31 @@ const MainPage = () => {
       selectedEntity &&
       movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
     ) {
+      // Don't highlight if another entity is already there
+      const isOccupiedByOtherPlayer = playerEntities.some(
+        e => e.id !== selectedEntity.id && e.position.q === position.q && e.position.r === position.r
+      );
+      
+      // Check if enemy is there
+      const isOccupiedByEnemy = enemyEntities.some(
+        e => e.position.q === position.q && e.position.r === position.r
+      );
+      
+      // Check if another pending move is targeting this position
+      const isTargetedByPendingMove = Array.from(pendingMoves.entries()).some(
+        ([entityId, pendingPos]) => 
+          entityId !== selectedEntity.id && 
+          pendingPos.q === position.q && 
+          pendingPos.r === position.r
+      );
+      
+      // If occupied or targeted by pending move, don't highlight
+      if (isOccupiedByOtherPlayer || isOccupiedByEnemy || isTargetedByPendingMove) {
+        return position.terrain.color; // Return normal terrain color
+      }
+      
       // Make all terrain types lighter when highlighted in movement range
-      if (position.terrain.type === "grass") return "#CEFFA0";
+      if (position.terrain.type === "grass") return "#E5FFD4"; // Lighter shade of green for grass
       if (position.terrain.type === "forest") return "#A3D682"; // Lighter green for forest
       if (position.terrain.type === "mountain") return "#B8E6B8"; // Lighter green for mountain
       return `${position.terrain.color}80`; // 80% opacity as fallback for other terrain types
