@@ -34,6 +34,7 @@ import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
 import SpriteDebugModal from "./components/SpriteDebugModal";
 import PlayerStatusFooter from "./components/PlayerStatusFooter";
+import PixelatedButton from "./components/PixelatedButton";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -952,21 +953,12 @@ const MainPage = () => {
 
         {/* Execute Moves Button */}
         {!isEnemyTurn && pendingMoves.size > 0 && (
-          <button
+          <PixelatedButton
             onClick={executeMoves}
-            style={{
-              padding: "10px 20px",
-              fontSize: "18px",
-              backgroundColor: "#4caf50",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-            }}
+            disabled={isEnemyTurn || pendingMoves.size === 0} // Ensure button is disabled appropriately
           >
             Execute Moves ({pendingMoves.size})
-          </button>
+          </PixelatedButton>
         )}
       </Box>
 

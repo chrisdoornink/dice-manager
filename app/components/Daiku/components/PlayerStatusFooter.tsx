@@ -65,7 +65,6 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
         backgroundColor: "rgba(0, 0, 0, 0.4)",
         padding: "5px",
         borderRadius: "4px",
-
         margin: "0 auto 10px auto",
       }}
     >
