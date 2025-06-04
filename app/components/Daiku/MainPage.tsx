@@ -275,6 +275,22 @@ const MainPage = () => {
     }
   }, [allGridPositions, initializeNewGame]);
 
+  // Save game state whenever critical parts change
+  useEffect(() => {
+    // Ensure the game has initialized and terrainMap is not empty
+    if (terrainMap.size > 0 && playerEntities.length > 0) {
+      const currentGameState = loadGameState(); // Load to preserve gameStartedAt if it exists
+      saveGameState({
+        terrainMap: terrainMapToArray(terrainMap),
+        playerEntities: playerEntities,
+        enemyEntities: enemyEntities,
+        currentTurn: currentTurn,
+        gameStartedAt: currentGameState?.gameStartedAt || Date.now(), // Preserve original start time
+        lastSavedAt: Date.now(),
+      });
+    }
+  }, [playerEntities, enemyEntities, currentTurn, terrainMap]);
+
   // Use a state to track if the grid has been initialized
   const [gridInitialized, setGridInitialized] = useState(false);
 
@@ -457,15 +473,6 @@ const MainPage = () => {
       setCurrentTurn(currentTurn + 1);
     }
 
-    // Save game state after moves are executed
-    saveGameState({
-      terrainMap: terrainMapToArray(terrainMap),
-      playerEntities: playerEntities,
-      currentTurn: currentTurn + 1,
-      gameStartedAt: loadGameState()?.gameStartedAt || Date.now(),
-      lastSavedAt: Date.now(),
-      enemyEntities: enemyEntities,
-    });
   };
 
   // Helper function to check if an entity is at a specific position
