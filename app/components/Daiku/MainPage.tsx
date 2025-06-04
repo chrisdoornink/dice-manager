@@ -33,6 +33,7 @@ import {
 import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
 import SpriteDebugModal from "./components/SpriteDebugModal";
+import PlayerStatusFooter from "./components/PlayerStatusFooter";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -472,7 +473,6 @@ const MainPage = () => {
       // Advance to next turn
       setCurrentTurn(currentTurn + 1);
     }
-
   };
 
   // Helper function to check if an entity is at a specific position
@@ -546,7 +546,7 @@ const MainPage = () => {
         flexDirection: "column",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: 0,
+        padding: "10px",
         overflow: "hidden",
         backgroundColor: "#5C4E45",
       }}
@@ -753,7 +753,11 @@ const MainPage = () => {
                         <polygon
                           points={hexagonPoints}
                           fill={`url(#terrain-pattern-${position.q}-${position.r})`}
-                          fillOpacity={position.terrain.patternOpacity !== undefined ? position.terrain.patternOpacity : 1}
+                          fillOpacity={
+                            position.terrain.patternOpacity !== undefined
+                              ? position.terrain.patternOpacity
+                              : 1
+                          }
                           clipPath={`url(#hexClip-${position.q}-${position.r})`}
                         />
                       </>
@@ -922,6 +926,9 @@ const MainPage = () => {
           alignItems: "center",
         }}
       >
+        {/* Player Status Footer */}
+        <PlayerStatusFooter playerEntities={playerEntities} />
+
         {/* Enemy Turn Notification */}
         {isEnemyTurn && (
           <Box
