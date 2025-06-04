@@ -925,41 +925,68 @@ const MainPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          padding: "0 16px", // Add padding on the sides for mobile
         }}
       >
-        {/* Player Status Footer */}
-        <PlayerStatusFooter playerEntities={playerEntities} />
-
-        {/* Enemy Turn Notification */}
-        {isEnemyTurn && (
-          <Box
-            sx={{
-              backgroundColor: "rgba(244, 67, 54, 0.8)",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              marginRight: "10px",
-              animation: "pulse 1.5s infinite",
-              "@keyframes pulse": {
-                "0%": { opacity: 0.7 },
-                "50%": { opacity: 1 },
-                "100%": { opacity: 0.7 },
-              },
-            }}
-          >
-            Enemy Turn
+        {/* Centered container with max width */}
+        <Box
+          sx={{
+            margin: "0 auto",
+            width: "100%",
+            maxWidth: "600px", // Max width for desktop view
+            display: "flex",
+            justifyContent: "space-between", // Space between left and right elements
+            alignItems: "center",
+            // Scale down content for screens below 650px
+            "@media (max-width: 650px)": {
+              transform: "scale(0.85)",
+              transformOrigin: "center",
+              gap: "10px",
+            },
+            // Scale down even more for very small screens
+            "@media (max-width: 480px)": {
+              transform: "scale(0.75)",
+              transformOrigin: "center",
+              gap: "5px",
+            },
+          }}
+        >
+          {/* Left side - Player Status Footer */}
+          <Box sx={{ textAlign: "left" }}>
+            <PlayerStatusFooter playerEntities={playerEntities} />
           </Box>
-        )}
 
-        {/* Execute Moves Button */}
-        {!isEnemyTurn && pendingMoves.size > 0 && (
-          <PixelatedButton
-            onClick={executeMoves}
-            disabled={isEnemyTurn || pendingMoves.size === 0} // Ensure button is disabled appropriately
-          >
-            Execute Moves ({pendingMoves.size})
-          </PixelatedButton>
-        )}
+          {/* Right side - Either Enemy Turn Notification or Execute Moves Button */}
+          <Box sx={{ textAlign: "right" }}>
+            {isEnemyTurn ? (
+              <Box
+                sx={{
+                  backgroundColor: "rgba(244, 67, 54, 0.8)",
+                  color: "white",
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  animation: "pulse 1.5s infinite",
+                  "@keyframes pulse": {
+                    "0%": { opacity: 0.7 },
+                    "50%": { opacity: 1 },
+                    "100%": { opacity: 0.7 },
+                  },
+                }}
+              >
+                Enemy Turn
+              </Box>
+            ) : (
+              pendingMoves.size > 0 && (
+                <PixelatedButton
+                  onClick={executeMoves}
+                  disabled={isEnemyTurn || pendingMoves.size === 0}
+                >
+                  Execute Moves ({pendingMoves.size})
+                </PixelatedButton>
+              )
+            )}
+          </Box>
+        </Box>
       </Box>
 
       {/* Sprite Debug Modal */}
