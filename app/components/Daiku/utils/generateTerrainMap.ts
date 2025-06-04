@@ -140,7 +140,8 @@ const getRandomTerrain = (
     };
   } else {
     // 40% chance of grass
-    terrain = TERRAIN_TYPES.grass;
+    // Use the new getGrassVariant function to get position-based grass
+    terrain = getGrassVariant(position);
   }
 
   // Store the terrain
@@ -234,6 +235,48 @@ export const getRandomMountainSprite = () => {
     y: sprite.y + offset.y,
     width: sprite.width,
     height: sprite.height,
+  };
+};
+
+// Define grass color variants (from lighter to darker, with hues closer to forest/mountain)
+export const GRASS_COLORS = [
+  "#8ED95F", // Lighter grass green
+  "#7EC850", // Original grass green
+  "#6EB545", // Slightly darker
+  "#5DA33A", // Darker, more rich
+  "#4F9430"  // Darkest, closer to forest
+];
+
+// Define grass patterns to vary blade positions
+export const GRASS_PATTERNS = [
+  "/images/terrain/grass.png", // Original grass pattern
+  "/images/terrain/grass_var1.png", // Variant 1 with shifted blades
+  "/images/terrain/grass_var2.png", // Variant 2 with different blade pattern
+  "/images/terrain/grass_var3.png"  // Variant 3 with more prominent blades
+];
+
+// Helper function to get a random grass variant based on position
+export const getGrassVariant = (position: GridPosition) => {
+  // Use position coordinates to seed the randomness for consistent rendering
+  // This ensures the same tile always gets the same variant
+  const positionHash = Math.abs(position.q * 31 + position.r * 17);
+  
+  // Select a color variant based on position
+  const colorIndex = positionHash % GRASS_COLORS.length;
+  const selectedColor = GRASS_COLORS[colorIndex];
+  
+  // Select a grass pattern based on position
+  // Adding a different factor to create variation between color and pattern
+  const patternIndex = (positionHash * 13) % GRASS_PATTERNS.length;
+  const selectedPattern = GRASS_PATTERNS[patternIndex];
+  
+  return {
+    type: "grass" as TerrainType,
+    color: selectedColor,
+    backgroundImage: selectedPattern,
+    spriteScale: 1.0,
+    // Add a position-based opacity variation for the grass blades
+    patternOpacity: 0.7 + (positionHash % 4) * 0.1 // Values between 0.7 and 1.0
   };
 };
 

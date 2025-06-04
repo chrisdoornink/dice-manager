@@ -23,6 +23,7 @@ export interface TerrainDefinition {
   backgroundImage?: string; // Path to a background image for the terrain
   spriteSheetSprite?: SpriteSheetSprite; // For sprites from a sprite sheet
   spriteScale?: number; // Scale factor for the sprite (1.0 = original size)
+  patternOpacity?: number; // Opacity of the background pattern (0.0 to 1.0)
 }
 
 // Define player entity types

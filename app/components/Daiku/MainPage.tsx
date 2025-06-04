@@ -746,6 +746,7 @@ const MainPage = () => {
                         <polygon
                           points={hexagonPoints}
                           fill={`url(#terrain-pattern-${position.q}-${position.r})`}
+                          fillOpacity={position.terrain.patternOpacity !== undefined ? position.terrain.patternOpacity : 1}
                           clipPath={`url(#hexClip-${position.q}-${position.r})`}
                         />
                       </>
