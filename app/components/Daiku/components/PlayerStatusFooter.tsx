@@ -62,10 +62,10 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
         justifyContent: "center",
         alignItems: "center",
         gap: "30px",
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        padding: "5px",
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        padding: "5px 10px",
         borderRadius: "4px",
-        margin: "0 auto 10px auto",
+        margin: "0 auto 20px auto",
       }}
     >
       {playerEntities.map((entity) => (

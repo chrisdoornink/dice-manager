@@ -511,6 +511,11 @@ const MainPage = () => {
     return undefined;
   };
 
+  // returns 140% for smaller screens, 100% for larger screens
+  const getExecuteButtonWidth = (): string => {
+    return window.innerWidth < 600 ? "140%" : "100%";
+  };
+
   const getHexagonFillColor = (position: HexagonData): string => {
     // Check if hexagon is hovered
     // if (hoveredHexagon && hoveredHexagon.q === position.q && hoveredHexagon.r === position.r) {
@@ -591,7 +596,7 @@ const MainPage = () => {
           <ResetButton onReset={handleReset} />
 
           {/* Sprite Debug Button - only for development */}
-          <button
+          {/* <button
             onClick={() => setSpriteDebugModalOpen(true)}
             style={{
               padding: "8px 16px",
@@ -606,7 +611,7 @@ const MainPage = () => {
             }}
           >
             Debug Sprites
-          </button>
+          </button> */}
         </Box>
 
         {/* Right side - Entity Info Panel */}
@@ -939,15 +944,15 @@ const MainPage = () => {
             alignItems: "center",
             // Scale down content for screens below 650px
             "@media (max-width: 650px)": {
-              transform: "scale(0.85)",
+              transform: "scale(0.85) translateX(-50px)",
               transformOrigin: "center",
               gap: "10px",
             },
             // Scale down even more for very small screens
             "@media (max-width: 480px)": {
-              transform: "scale(0.75)",
+              transform: "scale(0.75) translateX(-50px)",
               transformOrigin: "center",
-              gap: "5px",
+              gap: "10px",
             },
           }}
         >
@@ -980,6 +985,7 @@ const MainPage = () => {
                 <PixelatedButton
                   onClick={executeMoves}
                   disabled={isEnemyTurn || pendingMoves.size === 0}
+                  sx={{ width: getExecuteButtonWidth(), marginBottom: "20px" }}
                 >
                   Execute Moves ({pendingMoves.size})
                 </PixelatedButton>
