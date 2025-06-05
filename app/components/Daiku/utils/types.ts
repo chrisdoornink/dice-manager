@@ -41,6 +41,8 @@ export interface EntityDefinition {
   sprite?: string; // Path to entity sprite image
   spriteSheetSprite?: SpriteSheetSprite;
   movement: number;
+  // Attack value
+  attack: number;
   // Health attributes
   minHealth: number;
   maxHealth: number;

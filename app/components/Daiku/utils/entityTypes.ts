@@ -14,6 +14,7 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
+    attack: 1, // Archer has 1 attack
     minHealth: 1,
     maxHealth: 3,
     abilities: {
@@ -35,6 +36,7 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
+    attack: 2, // Cavalry has 2 attack
     minHealth: 2,
     maxHealth: 4,
     abilities: {
@@ -54,6 +56,7 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    attack: 3, // Infantry has 3 attack
     minHealth: 3,
     maxHealth: 5,
     abilities: {
@@ -73,6 +76,7 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
+    attack: 3, // Base attack is 3, but special calculation applies
     minHealth: 1,
     maxHealth: 2,
     abilities: {
@@ -96,6 +100,7 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
+    attack: 2, // 2 attack points
     minHealth: 2,
     maxHealth: 4,
     abilities: {
@@ -117,6 +122,7 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 0, // Does not move, only in water tiles
+    attack: 1, // 1 attack point
     minHealth: 1,
     maxHealth: 3,
     abilities: {
@@ -135,6 +141,7 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    attack: 2, // 2 attack points
     minHealth: 2,
     maxHealth: 4,
     abilities: {
@@ -154,6 +161,7 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    attack: 3, // 3 attack points
     minHealth: 3,
     maxHealth: 5,
     abilities: {
