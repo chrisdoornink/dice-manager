@@ -53,7 +53,19 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
     };
   };
 
-  const MOCKED_HEALTH = 3; // Mock health for now
+  // Get the current health of an entity, defaulting to maxHealth if not set
+  const getEntityHealth = (entity: PlayerEntity): number => {
+    if (entity.entityType.currentHealth !== undefined) {
+      return entity.entityType.currentHealth;
+    }
+    console.log("no current health for ", entity.entityType.type);
+    return entity.entityType.maxHealth || 3; // Default to 3 if maxHealth is not defined
+  };
+
+  // Get the maximum health of an entity, defaulting to 3 if not set
+  const getMaxHealth = (entity: PlayerEntity): number => {
+    return entity.entityType.maxHealth || 3;
+  };
 
   return (
     <Box
@@ -95,13 +107,22 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
 
           {/* Health Hearts */}
           <Box sx={{ display: "flex", marginTop: "5px", flexDirection: "column" }}>
-            {Array.from({ length: MOCKED_HEALTH }).map((_, index) => (
-              <span key={index}>
-                {" "}
-                {/* Added span for margin */}
-                <Image src="/images/entities/heart.png" alt="heart" width={15} height={15} />
-              </span>
-            ))}
+            {/* Single column of hearts with minimal vertical spacing */}
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              {Array.from({ length: getMaxHealth(entity) }).map((_, index) => {
+                const isActive = index < getEntityHealth(entity);
+                return (
+                  <span key={index} style={{ marginBottom: "0px" }}>
+                    <Image
+                      src={isActive ? "/images/entities/heart.png" : "/images/entities/empty-heart.png"}
+                      alt={isActive ? "heart" : "empty heart"}
+                      width={15}
+                      height={15}
+                    />
+                  </span>
+                );
+              })}
+            </Box>
           </Box>
         </Box>
       ))}

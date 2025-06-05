@@ -14,6 +14,8 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
+    minHealth: 1,
+    maxHealth: 3,
     abilities: {
       extraRangeInMountains: true,
       poorRangeInForests: true,
@@ -33,6 +35,8 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
+    minHealth: 2,
+    maxHealth: 4,
     abilities: {
       poorInForests: true,
       greatInGrass: true,
@@ -50,6 +54,8 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    minHealth: 3,
+    maxHealth: 5,
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,
@@ -67,6 +73,8 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
+    minHealth: 1,
+    maxHealth: 2,
     abilities: {
       poorDefense: true,
       canCastFireball: true,
@@ -88,6 +96,8 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
+    minHealth: 2,
+    maxHealth: 4,
     abilities: {
       extraRangeInMountains: true,
       poorRangeInForests: true,
@@ -107,6 +117,8 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 0, // Does not move, only in water tiles
+    minHealth: 1,
+    maxHealth: 3,
     abilities: {
       waterOnly: true,
     },
@@ -123,6 +135,8 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    minHealth: 2,
+    maxHealth: 4,
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,
@@ -140,6 +154,8 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
+    minHealth: 3,
+    maxHealth: 5,
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,

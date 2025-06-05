@@ -41,6 +41,10 @@ export interface EntityDefinition {
   sprite?: string; // Path to entity sprite image
   spriteSheetSprite?: SpriteSheetSprite;
   movement: number;
+  // Health attributes
+  minHealth: number;
+  maxHealth: number;
+  currentHealth?: number; // Optional current health, defaults to maxHealth if not set
   // Special abilities and characteristics
   abilities: {
     extraRangeInMountains?: boolean;

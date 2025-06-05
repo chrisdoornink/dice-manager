@@ -132,6 +132,7 @@ const MainPage = () => {
 
   // Initialize a new game
   const initializeNewGame = useCallback(() => {
+    console.log("initializeNewGame");
     if (allGridPositions.length > 0) {
       const newTerrainMap = generateTerrainMap(allGridPositions);
       setTerrainMap(newTerrainMap);
@@ -150,27 +151,51 @@ const MainPage = () => {
       // Shuffle the positions to randomize placement
       const shuffledPositions = [...potentialStartPositions].sort(() => Math.random() - 0.5);
 
+      // Helper function to initialize entity with random health within its range
+      const initializeWithHealth = (unitType: any, key: string) => {
+        const baseType = { ...unitType[key] };
+
+        if (baseType.minHealth !== undefined && baseType.maxHealth !== undefined) {
+          // Set the current health to a random value between minHealth and maxHealth (inclusive)
+          const randomHealth =
+            Math.floor(Math.random() * (baseType.maxHealth - baseType.minHealth + 1)) +
+            baseType.minHealth;
+          return {
+            ...baseType,
+            currentHealth: randomHealth,
+          };
+        }
+
+        // If no health attributes are defined, set defaults
+        return {
+          ...baseType,
+          minHealth: 1,
+          maxHealth: 3,
+          currentHealth: 3,
+        };
+      };
+
       // Create the entities at the shuffled positions - one of each type for easier debugging
       const newPlayerEntities: PlayerEntity[] = [
         {
           id: "archer-1",
           position: shuffledPositions[0],
-          entityType: playerUnitTypes.archer,
+          entityType: initializeWithHealth(playerUnitTypes, "archer"),
         },
         {
           id: "cavalry-1",
           position: shuffledPositions[1],
-          entityType: playerUnitTypes.cavalry,
+          entityType: initializeWithHealth(playerUnitTypes, "cavalry"),
         },
         {
           id: "infantry-1",
           position: shuffledPositions[2],
-          entityType: playerUnitTypes.infantry,
+          entityType: initializeWithHealth(playerUnitTypes, "infantry"),
         },
         {
           id: "mage-1",
           position: shuffledPositions[3] || { q: 1, r: -1 }, // Fallback position if not enough shuffled positions
-          entityType: playerUnitTypes.mage,
+          entityType: initializeWithHealth(playerUnitTypes, "mage"),
         },
       ];
 
@@ -194,25 +219,25 @@ const MainPage = () => {
         {
           id: "clobbin-1",
           position: getEnemyPosition(),
-          entityType: enemyUnitTypes.clobbin,
+          entityType: initializeWithHealth(enemyUnitTypes, "clobbin"),
           isEnemy: true,
         },
         {
           id: "spud dle-1",
           position: getEnemyPosition(),
-          entityType: enemyUnitTypes.spuddle,
+          entityType: initializeWithHealth(enemyUnitTypes, "spuddle"),
           isEnemy: true,
         },
         {
           id: "skritcher-1",
           position: getEnemyPosition(),
-          entityType: enemyUnitTypes.skritcher,
+          entityType: initializeWithHealth(enemyUnitTypes, "skritcher"),
           isEnemy: true,
         },
         {
           id: "whumble-1",
           position: getEnemyPosition(),
-          entityType: enemyUnitTypes.whumble,
+          entityType: initializeWithHealth(enemyUnitTypes, "whumble"),
           isEnemy: true,
         },
       ];
@@ -531,27 +556,28 @@ const MainPage = () => {
     ) {
       // Don't highlight if another entity is already there
       const isOccupiedByOtherPlayer = playerEntities.some(
-        e => e.id !== selectedEntity.id && e.position.q === position.q && e.position.r === position.r
+        (e) =>
+          e.id !== selectedEntity.id && e.position.q === position.q && e.position.r === position.r
       );
-      
+
       // Check if enemy is there
       const isOccupiedByEnemy = enemyEntities.some(
-        e => e.position.q === position.q && e.position.r === position.r
+        (e) => e.position.q === position.q && e.position.r === position.r
       );
-      
+
       // Check if another pending move is targeting this position
       const isTargetedByPendingMove = Array.from(pendingMoves.entries()).some(
-        ([entityId, pendingPos]) => 
-          entityId !== selectedEntity.id && 
-          pendingPos.q === position.q && 
+        ([entityId, pendingPos]) =>
+          entityId !== selectedEntity.id &&
+          pendingPos.q === position.q &&
           pendingPos.r === position.r
       );
-      
+
       // If occupied or targeted by pending move, don't highlight
       if (isOccupiedByOtherPlayer || isOccupiedByEnemy || isTargetedByPendingMove) {
         return position.terrain.color; // Return normal terrain color
       }
-      
+
       // Make all terrain types lighter when highlighted in movement range
       if (position.terrain.type === "grass") return "#E5FFD4"; // Lighter shade of green for grass
       if (position.terrain.type === "forest") return "#A3D682"; // Lighter green for forest
