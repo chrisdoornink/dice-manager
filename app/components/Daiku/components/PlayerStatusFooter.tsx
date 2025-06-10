@@ -109,12 +109,13 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
           <Box sx={{ display: "flex", marginTop: "5px", flexDirection: "column" }}>
             {/* Single column of hearts with minimal vertical spacing */}
             <Box sx={{ display: "flex", flexDirection: "column" }}>
-              {Array.from({ length: getEntityHealth(entity) }).map((_, index) => {
+              {Array.from({ length: getMaxHealth(entity) }).map((_, index) => {
+                const isActive = index < getEntityHealth(entity);
                 return (
                   <span key={index} style={{ marginBottom: "0px" }}>
                     <Image
-                      src={"/images/entities/heart.png"}
-                      alt={"heart"}
+                      src={isActive ? "/images/entities/heart.png" : "/images/entities/empty-heart.png"}
+                      alt={isActive ? "heart" : "empty heart"}
                       width={15}
                       height={15}
                     />
