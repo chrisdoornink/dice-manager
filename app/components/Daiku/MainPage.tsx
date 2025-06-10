@@ -11,32 +11,39 @@ import {
   HexagonData,
 } from "./utils/types";
 import { EntityInfoPanel } from "./components/EntityInfoPanel";
-import useEnemyAI from "./hooks/useEnemyAI";
 import Entity from "./components/Entity";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
 import { generateHexPoints } from "./utils/hexMath";
-import { useHexagonAnimation } from "./hooks/useHexagonAnimation";
-import { ANIMATION_DELAY, TERRAIN_TYPES } from "./utils/generateTerrainMap";
-import { generateTerrainMap } from "./utils/generateTerrainMap";
+import { TERRAIN_TYPES } from "./utils/generateTerrainMap";
 import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
-import { createHexagonalGrid } from "./hooks/useHexagonalGrid";
-import { useHexagonSize } from "./hooks/useHexagonSize";
-import {
-  saveGameState,
-  loadGameState,
-  clearGameState,
-  terrainMapToArray,
-  arrayToTerrainMap,
-  GameState,
-} from "./utils/gameState";
-import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
 import SpriteDebugModal from './components/SpriteDebugModal';
 import HealthDebugModal from './components/HealthDebugModal';
 import PlayerStatusFooter from "./components/PlayerStatusFooter";
 import PixelatedButton from "./components/PixelatedButton";
 import Button from '@mui/material/Button';
+
+// Import our custom hooks
+import useWindowDimensions from "./hooks/useWindowDimensions";
+import { useHexagonSize } from "./hooks/useHexagonSize";
+import useTerrainMap from "./hooks/useTerrainMap";
+import useHexagonHighlight from "./hooks/useHexagonHighlight";
+import useEntitySelection from "./hooks/useEntitySelection";
+import useEntityManagement from "./hooks/useEntityManagement";
+import useMoveManagement from "./hooks/useMoveManagement";
+import useEnemyTurn from "./hooks/useEnemyTurn";
+import useTurnManagement from "./hooks/useTurnManagement";
+import useModals from "./hooks/useModals";
+import useGridInitialization from "./hooks/useGridInitialization";
+import useGameInitialization from "./hooks/useGameInitialization";
+import useGameVisuals from "./hooks/useGameVisuals";
+import useTileSelection from "./hooks/useTileSelection";
+import useEnemyAI from "./hooks/useEnemyAI";
+
+// Import utility functions
+import { generateTerrainMap } from "./utils/generateTerrainMap";
+import { saveGameState, loadGameState, clearGameState } from "./utils/gameState";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -46,386 +53,139 @@ const customCursors = {
 };
 
 const MainPage = () => {
-  // Responsive sizing - calculate hexagon size based on screen dimensions
-  const [windowDimensions, setWindowDimensions] = useState<{ width: number; height: number }>({
-    width: typeof window !== "undefined" ? window.innerWidth : 1200,
-    height: typeof window !== "undefined" ? window.innerHeight : 800,
-  });
-
-  // Update window dimensions when resized
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    // Add event listener
-    window.addEventListener("resize", handleResize);
-
-    // Call handler right away to get initial size
-    handleResize();
-
-    // Remove event listener on cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // take into account the 10% header and   10% footer
+  // Get window dimensions using our custom hook
+  const windowDimensions = useWindowDimensions();
+  
+  // take into account the 10% header and 10% footer
   const calculatedWindowDimensions = {
     width: windowDimensions.width * 0.8,
     height: windowDimensions.height * 0.8,
   };
-
+  
+  // Get hexagon size using the hexagon size hook
   const [hexSize, hexWidth, hexHeight] = useHexagonSize({
     windowDimensions: calculatedWindowDimensions,
   });
-
-  // Pre-generate a terrain map to ensure connectivity
-  const [terrainMap, setTerrainMap] = useState<Map<string, TerrainDefinition>>(new Map());
-
-  // Track which hexagons are highlighted as neighbors
-  const [highlightedNeighbors, setHighlightedNeighbors] = useState<GridPosition[]>([]);
-
-  // Track the currently hovered hexagon
-  const [hoveredHexagon, setHoveredHexagon] = useState<GridPosition | null>(null);
-
-  // Track selected entity for movement range display
-  const [selectedEntity, setSelectedEntity] = useState<PlayerEntity | null>(null);
-
-  // Track which hexagons are within movement range of selected entity
-  const [movementRangeHexagons, setMovementRangeHexagons] = useState<GridPosition[]>([]);
-
-  // Track if we're in tile selection mode (selecting a destination for movement/attack)
-  const [isSelectingDestination, setIsSelectingDestination] = useState<boolean>(false);
-
-  // Generate all positions in the grid using axial coordinates
-
-  // Track player entities
-  const [playerEntities, setPlayerEntities] = useState<PlayerEntity[]>([]);
-
-  // Enemy entities on the grid
-  const [enemyEntities, setEnemyEntities] = useState<EnemyEntity[]>([]);
-
-  // Track pending moves for the current turn
-  const [pendingMoves, setPendingMoves] = useState<Map<string, GridPosition>>(new Map());
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [errorMessageTimeout, setErrorMessageTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // Enemy turn tracking
-  const [isEnemyTurn, setIsEnemyTurn] = useState(false);
-  const [enemyPendingMoves, setEnemyPendingMoves] = useState<Map<string, GridPosition>>(new Map());
-
+  
+  // Get grid positions
+  const { allGridPositions } = useGridInitialization();
+  
+  // Use terrain map hook
+  const { terrainMap, setTerrainMap } = useTerrainMap(allGridPositions);
+  
+  // Use entity management hook
+  const {
+    playerEntities,
+    setPlayerEntities,
+    enemyEntities,
+    setEnemyEntities
+  } = useEntityManagement();
+  
+  // Use entity selection hook
+  const {
+    selectedEntity,
+    setSelectedEntity,
+    movementRangeHexagons,
+    setMovementRangeHexagons,
+    isSelectingDestination,
+    setIsSelectingDestination
+  } = useEntitySelection();
+  
+  // Use hexagon highlight hook
+  const {
+    highlightedNeighbors,
+    setHighlightedNeighbors,
+    hoveredHexagon,
+    setHoveredHexagon
+  } = useHexagonHighlight();
+  
+  // Use move management hook
+  const {
+    pendingMoves,
+    setPendingMoves,
+    errorMessage,
+    setErrorMessage,
+    errorMessageTimeout,
+    setErrorMessageTimeout,
+    showError
+  } = useMoveManagement();
+  
+  // Use enemy turn hook
+  const {
+    isEnemyTurn,
+    setIsEnemyTurn,
+    enemyPendingMoves,
+    setEnemyPendingMoves
+  } = useEnemyTurn();
+  
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
+  
+  // Use turn management hook
+  const { currentTurn, setCurrentTurn } = useTurnManagement();
+  
+  // Use modals hook
+  const {
+    isSpriteDebugModalOpen,
+    setIsSpriteDebugModalOpen,
+    isHealthDebugModalOpen,
+    setIsHealthDebugModalOpen
+  } = useModals();
 
-  const [allGridPositions, setAllGridPositions] = useState<GridPosition[]>([]);
-
+  // Track if the grid has been initialized and animated once
+  const [gridInitialized, setGridInitialized] = useState(false);
+  
+  // Use game initialization hook - must be before the save game effect
+  const { initializeNewGame, handleReset, saveGame } = useGameInitialization({
+    allGridPositions,
+    setTerrainMap,
+    setPlayerEntities,
+    setEnemyEntities,
+    setCurrentTurn,
+    setPendingMoves,
+    setSelectedEntity,
+    setMovementRangeHexagons,
+    setIsSelectingDestination
+  });
+  
+  // Use tile selection hook - must be after all other state hooks are defined
+  const { handleTileSelection } = useTileSelection({
+    playerEntities,
+    enemyEntities,
+    pendingMoves,
+    selectedEntity,
+    movementRangeHexagons,
+    setErrorMessage,
+    setPendingMoves,
+    setSelectedEntity,
+    setIsSelectingDestination
+  });
+  
+  // Save game state whenever critical parts change
   useEffect(() => {
-    const gridPositions = createHexagonalGrid();
-    setAllGridPositions(gridPositions);
-  }, []);
-
-  // Track game turns
-  const [currentTurn, setCurrentTurn] = useState<number>(1);
-
-  // State for sprite debug modal
-  const [isSpriteDebugModalOpen, setIsSpriteDebugModalOpen] = useState(false);
-  const [isHealthDebugModalOpen, setIsHealthDebugModalOpen] = useState(false);
-
+    // Ensure the game has initialized and terrainMap is not empty
+    if (terrainMap.size > 0 && playerEntities.length > 0) {
+      saveGame(terrainMap, playerEntities, enemyEntities, currentTurn);
+    }
+  }, [playerEntities, enemyEntities, currentTurn, terrainMap, saveGame]);
+  
   // TODO: Replace with actual enemy data
   const enemiesForDebug: EnemyEntity[] = [
     // Example enemy, replace with actual data from your game state
     // { id: 'enemy1', type: 'Goblin', icon: 'G', currentHealth: 30, maxHealth: 30, attack: '5-10', q: 1, r: 1, initiative: 10 }, 
   ];
 
-  // Initialize a new game
-  const initializeNewGame = useCallback(() => {
-    console.log("initializeNewGame");
-    if (allGridPositions.length > 0) {
-      const newTerrainMap = generateTerrainMap(allGridPositions);
-      setTerrainMap(newTerrainMap);
-
-      // Find suitable starting positions for entities (non-water terrain near center)
-      const centerPos = { q: 0, r: 0 };
-      const potentialStartPositions = [
-        centerPos,
-        ...getNeighboringTiles(centerPos).filter((pos) => {
-          const posKey = `${pos.q},${pos.r}`;
-          const terrain = newTerrainMap.get(posKey);
-          return terrain && terrain.type !== "water";
-        }),
-      ];
-
-      // Shuffle the positions to randomize placement
-      const shuffledPositions = [...potentialStartPositions].sort(() => Math.random() - 0.5);
-
-      // Helper function to initialize entity with random health within its range
-      const initializeWithHealth = (unitType: any, key: string) => {
-        const baseType = { ...unitType[key] };
-
-        if (baseType.minHealth !== undefined && baseType.maxHealth !== undefined) {
-          // Set the current health to a random value between minHealth and maxHealth (inclusive)
-          const randomHealth =
-            Math.floor(Math.random() * (baseType.maxHealth - baseType.minHealth + 1)) +
-            baseType.minHealth;
-          return {
-            ...baseType,
-            currentHealth: randomHealth,
-          };
-        }
-
-        // If no health attributes are defined, set defaults
-        return {
-          ...baseType,
-          minHealth: 1,
-          maxHealth: 3,
-          currentHealth: 3,
-        };
-      };
-
-      // Create the entities at the shuffled positions - one of each type for easier debugging
-      const newPlayerEntities: PlayerEntity[] = [
-        {
-          id: "archer-1",
-          position: shuffledPositions[0],
-          entityType: initializeWithHealth(playerUnitTypes, "archer"),
-        },
-        {
-          id: "cavalry-1",
-          position: shuffledPositions[1],
-          entityType: initializeWithHealth(playerUnitTypes, "cavalry"),
-        },
-        {
-          id: "infantry-1",
-          position: shuffledPositions[2],
-          entityType: initializeWithHealth(playerUnitTypes, "infantry"),
-        },
-        {
-          id: "mage-1",
-          position: shuffledPositions[3] || { q: 1, r: -1 }, // Fallback position if not enough shuffled positions
-          entityType: initializeWithHealth(playerUnitTypes, "mage"),
-        },
-      ];
-
-      setPlayerEntities(newPlayerEntities);
-      setCurrentTurn(1);
-
-      const getEnemyPosition = () => {
-        return allGridPositions
-          .filter((pos) => {
-            // Find positions at the far end of the map
-            const distance = Math.abs(pos.q) + Math.abs(pos.r);
-            const posKey = `${pos.q},${pos.r}`;
-            const terrain = newTerrainMap.get(posKey);
-            // Choose non-water terrain that's far from the center
-            return distance > 4 && terrain && terrain.type !== "water";
-          })
-          .sort(() => Math.random() - 0.5)[0]; // Pick a random position from candidates
-      };
-
-      const newEnemyEntities: EnemyEntity[] = [
-        {
-          id: "clobbin-1",
-          position: getEnemyPosition(),
-          entityType: initializeWithHealth(enemyUnitTypes, "clobbin"),
-          isEnemy: true,
-        },
-        {
-          id: "spud dle-1",
-          position: getEnemyPosition(),
-          entityType: initializeWithHealth(enemyUnitTypes, "spuddle"),
-          isEnemy: true,
-        },
-        {
-          id: "skritcher-1",
-          position: getEnemyPosition(),
-          entityType: initializeWithHealth(enemyUnitTypes, "skritcher"),
-          isEnemy: true,
-        },
-        {
-          id: "whumble-1",
-          position: getEnemyPosition(),
-          entityType: initializeWithHealth(enemyUnitTypes, "whumble"),
-          isEnemy: true,
-        },
-      ];
-
-      setEnemyEntities(newEnemyEntities);
-
-      // Save the initial game state
-      saveGameState({
-        terrainMap: terrainMapToArray(newTerrainMap),
-        playerEntities: newPlayerEntities,
-        enemyEntities: newEnemyEntities,
-        currentTurn: 1,
-        gameStartedAt: Date.now(),
-        lastSavedAt: Date.now(),
-      });
-    }
-  }, [allGridPositions]);
-
-  // Handle reset button click
-  const handleReset = useCallback(() => {
-    // Clear all game state
-    clearGameState();
-
-    // Reset all React state
-    setTerrainMap(new Map());
-    setPlayerEntities([]);
-    setEnemyEntities([]);
-    setPendingMoves(new Map());
-    setSelectedEntity(null);
-    setMovementRangeHexagons([]);
-    setIsSelectingDestination(false);
-    setCurrentTurn(1);
-
-    // Small delay to ensure the UI clears before generating a new game
-    setTimeout(() => {
-      initializeNewGame();
-    }, 50);
-  }, [initializeNewGame]);
-
-  // Load saved game or initialize a new one
-  useEffect(() => {
-    if (allGridPositions.length > 0) {
-      const savedState = loadGameState();
-
-      if (savedState) {
-        // Restore from saved state
-        try {
-          const restoredTerrainMap = arrayToTerrainMap(savedState.terrainMap);
-          setTerrainMap(restoredTerrainMap);
-          setPlayerEntities(savedState.playerEntities);
-          setEnemyEntities(savedState.enemyEntities || []); // Handle older saves that might not have enemies
-          setCurrentTurn(savedState.currentTurn);
-          console.log("Game state loaded from save", savedState.lastSavedAt);
-        } catch (error) {
-          console.error("Error restoring saved game:", error);
-          initializeNewGame(); // Fall back to new game if restoration fails
-        }
-      } else {
-        // No saved game, start a new one
-        initializeNewGame();
-      }
-    }
-  }, [allGridPositions, initializeNewGame]);
-
-  // Save game state whenever critical parts change
-  useEffect(() => {
-    // Ensure the game has initialized and terrainMap is not empty
-    if (terrainMap.size > 0 && playerEntities.length > 0) {
-      const currentGameState = loadGameState(); // Load to preserve gameStartedAt if it exists
-      saveGameState({
-        terrainMap: terrainMapToArray(terrainMap),
-        playerEntities: playerEntities,
-        enemyEntities: enemyEntities,
-        currentTurn: currentTurn,
-        gameStartedAt: currentGameState?.gameStartedAt || Date.now(), // Preserve original start time
-        lastSavedAt: Date.now(),
-      });
-    }
-  }, [playerEntities, enemyEntities, currentTurn, terrainMap]);
-
-  // Use a state to track if the grid has been initialized
-  const [gridInitialized, setGridInitialized] = useState(false);
-
-  // Use the animation hook only for initial grid setup
-  const animatedHexagons = useHexagonAnimation({
+  // Use game visuals hook
+  const { visibleHexagons } = useGameVisuals({
     allGridPositions,
-    animationDelay: ANIMATION_DELAY,
     terrainMap,
-    defaultTerrain: TERRAIN_TYPES.grass,
-    playerEntities: [], // Remove dependency on playerEntities to prevent re-animations
+    gridInitialized,
+    setGridInitialized
   });
-
-  // Create a static grid representation for subsequent renders
-  const staticHexagons = React.useMemo(() => {
-    return allGridPositions.map((pos) => {
-      const posKey = `${pos.q},${pos.r}`;
-      const terrain = terrainMap.get(posKey) || TERRAIN_TYPES.grass;
-      return { q: pos.q, r: pos.r, terrain } as HexagonData;
-    });
-  }, [allGridPositions, terrainMap]);
-
-  // Only use animation on initial load, not for every state update
-  const visibleHexagons = React.useMemo(() => {
-    // Once we've seen the animation once, use static grid for all future renders
-    if (animatedHexagons.length === allGridPositions.length && !gridInitialized) {
-      setGridInitialized(true);
-    }
-
-    return gridInitialized ? staticHexagons : animatedHexagons;
-  }, [animatedHexagons, staticHexagons, allGridPositions.length, gridInitialized]);
 
   const hexagonPoints = generateHexPoints();
 
   // Helper function to determine the fill color based on hexagon state
-  // Handle tile selection for movement/attack
-  const handleTileSelection = (targetPosition: HexagonData) => {
-    if (!selectedEntity) return;
-
-    // Check if the target position will be occupied after all pending moves
-    const willBeOccupied = () => {
-      // Get all entities (both player and enemy)
-      const allEntities = [...playerEntities, ...enemyEntities];
-
-      // First, check if any entity without a pending move will be at the target position
-      const entityAtTarget = allEntities.find((entity) => {
-        // Skip the currently selected entity since it's moving
-        if (entity.id === selectedEntity.id) return false;
-
-        // If this entity has a pending move, skip it (its current position will be vacated)
-        if (pendingMoves.has(entity.id)) return false;
-
-        // Check if this entity's position matches the target position
-        return entity.position.q === targetPosition.q && entity.position.r === targetPosition.r;
-      });
-
-      if (entityAtTarget) return true;
-
-      // Next, check if any other entity has a pending move to this same position
-      const pendingMoveToTarget = Array.from(pendingMoves.entries()).some(
-        ([entityId, position]) => {
-          // Skip the currently selected entity
-          if (entityId === selectedEntity.id) return false;
-
-          return position.q === targetPosition.q && position.r === targetPosition.r;
-        }
-      );
-
-      return pendingMoveToTarget;
-    };
-
-    // Don't allow moving to an occupied position
-    if (willBeOccupied()) {
-      // Clear any existing timeout
-      if (errorMessageTimeout) {
-        clearTimeout(errorMessageTimeout);
-      }
-
-      // Set error message
-      setErrorMessage("Cannot move to an occupied position");
-
-      // Clear the message after 2 seconds
-      const timeout = setTimeout(() => {
-        setErrorMessage("");
-      }, 2000);
-
-      setErrorMessageTimeout(timeout);
-      return;
-    }
-
-    // Add to pending moves instead of immediately moving
-    const newPendingMoves = new Map(pendingMoves);
-    newPendingMoves.set(selectedEntity.id, { q: targetPosition.q, r: targetPosition.r });
-    setPendingMoves(newPendingMoves);
-
-    // Clear movement range and selection state
-    setMovementRangeHexagons([]);
-    setSelectedEntity(null);
-    setIsSelectingDestination(false);
-  };
 
   // Execute all pending moves and advance turn
   const executeMoves = () => {
@@ -1057,20 +817,20 @@ const MainPage = () => {
       </Box>
 
       {/* Sprite Debug Modal */}
-      <Button 
-            variant="outlined"
-            onClick={() => setIsHealthDebugModalOpen(true)} 
-            sx={{ mr: 1, position: 'absolute', top: 80, right: 165, zIndex: 1300  }} // Adjusted positioning
-          >
-            Debug Health
-          </Button>
-          <HealthDebugModal 
-            open={isHealthDebugModalOpen} 
-            onClose={() => setIsHealthDebugModalOpen(false)} 
-            players={playerEntities} // Use playerEntities which is in scope
-            enemies={enemiesForDebug} // Pass the dummy or actual enemy data here
-          />
-          <SpriteDebugModal
+      <Button
+        variant="outlined"
+        onClick={() => setIsHealthDebugModalOpen(true)}
+        sx={{ mr: 1, position: "absolute", top: 80, right: 165, zIndex: 1300 }} // Adjusted positioning
+      >
+        Debug Health
+      </Button>
+      <HealthDebugModal
+        open={isHealthDebugModalOpen}
+        onClose={() => setIsHealthDebugModalOpen(false)}
+        players={playerEntities} // Use playerEntities which is in scope
+        enemies={enemiesForDebug} // Pass the dummy or actual enemy data here
+      />
+      <SpriteDebugModal
         open={isSpriteDebugModalOpen}
         onClose={() => setIsSpriteDebugModalOpen(false)}
       />
