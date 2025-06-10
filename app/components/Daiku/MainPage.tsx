@@ -32,9 +32,11 @@ import {
 } from "./utils/gameState";
 import { EnemyEntities } from "./components/EnemyEntities";
 import { ResetButton } from "./components/ResetButton";
-import SpriteDebugModal from "./components/SpriteDebugModal";
+import SpriteDebugModal from './components/SpriteDebugModal';
+import HealthDebugModal from './components/HealthDebugModal';
 import PlayerStatusFooter from "./components/PlayerStatusFooter";
 import PixelatedButton from "./components/PixelatedButton";
+import Button from '@mui/material/Button';
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -128,7 +130,14 @@ const MainPage = () => {
   const [currentTurn, setCurrentTurn] = useState<number>(1);
 
   // State for sprite debug modal
-  const [spriteDebugModalOpen, setSpriteDebugModalOpen] = useState<boolean>(false);
+  const [isSpriteDebugModalOpen, setIsSpriteDebugModalOpen] = useState(false);
+  const [isHealthDebugModalOpen, setIsHealthDebugModalOpen] = useState(false);
+
+  // TODO: Replace with actual enemy data
+  const enemiesForDebug: EnemyEntity[] = [
+    // Example enemy, replace with actual data from your game state
+    // { id: 'enemy1', type: 'Goblin', icon: 'G', currentHealth: 30, maxHealth: 30, attack: '5-10', q: 1, r: 1, initiative: 10 }, 
+  ];
 
   // Initialize a new game
   const initializeNewGame = useCallback(() => {
@@ -1048,9 +1057,22 @@ const MainPage = () => {
       </Box>
 
       {/* Sprite Debug Modal */}
-      <SpriteDebugModal
-        open={spriteDebugModalOpen}
-        onClose={() => setSpriteDebugModalOpen(false)}
+      <Button 
+            variant="outlined"
+            onClick={() => setIsHealthDebugModalOpen(true)} 
+            sx={{ mr: 1, position: 'absolute', top: 80, right: 165, zIndex: 1300  }} // Adjusted positioning
+          >
+            Debug Health
+          </Button>
+          <HealthDebugModal 
+            open={isHealthDebugModalOpen} 
+            onClose={() => setIsHealthDebugModalOpen(false)} 
+            players={playerEntities} // Use playerEntities which is in scope
+            enemies={enemiesForDebug} // Pass the dummy or actual enemy data here
+          />
+          <SpriteDebugModal
+        open={isSpriteDebugModalOpen}
+        onClose={() => setIsSpriteDebugModalOpen(false)}
       />
     </Container>
   );
