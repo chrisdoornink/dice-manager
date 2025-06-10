@@ -10,6 +10,7 @@ interface FooterSectionProps {
   isEnemyTurn: boolean;
   pendingMoves: Map<string, GridPosition>;
   executeMoves: () => void;
+  getStatusMessage?: () => string;
 }
 
 const FooterSection: React.FC<FooterSectionProps> = ({
@@ -17,6 +18,7 @@ const FooterSection: React.FC<FooterSectionProps> = ({
   isEnemyTurn,
   pendingMoves,
   executeMoves,
+  getStatusMessage,
 }) => {
   // Ensure button width is appropriate based on move count
   const getExecuteButtonWidth = () => {
@@ -86,15 +88,14 @@ const FooterSection: React.FC<FooterSectionProps> = ({
               Enemy Turn
             </Box>
           ) : (
-            pendingMoves.size > 0 && (
-              <PixelatedButton
-                onClick={executeMoves}
-                disabled={isEnemyTurn || pendingMoves.size === 0}
-                sx={{ width: getExecuteButtonWidth(), marginBottom: '20px' }}
-              >
-                Execute Moves ({pendingMoves.size})
-              </PixelatedButton>
-            )
+            <PixelatedButton
+              onClick={executeMoves}
+              disabled={pendingMoves.size === 0 || isEnemyTurn}
+              width={getExecuteButtonWidth()}
+              textSize="1rem"
+            >
+              {getStatusMessage ? getStatusMessage() : (isEnemyTurn ? 'Enemy Turn' : pendingMoves.size > 0 ? `Execute (${pendingMoves.size})` : 'Select Moves')}
+            </PixelatedButton>
           )}
         </Box>
       </Box>

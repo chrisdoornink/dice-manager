@@ -38,6 +38,18 @@ const Entity: React.FC<EntityProps> = ({
     // return "none";
   };
 
+  // Get current health and max health
+  const currentHealth = entity.entityType.currentHealth !== undefined ? entity.entityType.currentHealth : entity.entityType.maxHealth;
+  const maxHealth = entity.entityType.maxHealth;
+  const healthPercentage = Math.max(0, Math.min(100, (currentHealth / maxHealth) * 100));
+  
+  // Determine health bar color based on percentage
+  const getHealthColor = () => {
+    if (healthPercentage > 66) return '#4CAF50'; // Green
+    if (healthPercentage > 33) return '#FFC107'; // Yellow/amber
+    return '#F44336'; // Red
+  };
+
   // Render using the sprite sheet if available
   if (entity.entityType.spriteSheetSprite) {
     return (
@@ -71,6 +83,33 @@ const Entity: React.FC<EntityProps> = ({
             top: !entity.isEnemy ? "8px" : "0", // Move player sprites up even more
           }}
         />
+        
+        {/* Health bar for sprite-based entities */}
+        {!isGhost && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: '-12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80%',
+              height: '4px',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              zIndex: 10,
+            }}
+          >
+            <Box 
+              sx={{
+                width: `${healthPercentage}%`,
+                height: '100%',
+                backgroundColor: getHealthColor(),
+                transition: 'width 0.3s ease-in-out',
+              }}
+            />
+          </Box>
+        )}
       </Box>
     );
   }
@@ -85,6 +124,7 @@ const Entity: React.FC<EntityProps> = ({
       sx={{
         width: `${size}px`,
         height: `${size}px`,
+        position: 'relative', // For absolute positioning of health bar
         borderRadius: "50%",
         backgroundColor: entity.entityType.color,
         display: "flex",
@@ -100,6 +140,32 @@ const Entity: React.FC<EntityProps> = ({
         ...style,
       }}
     >
+      {/* Health bar */}
+      {!isGhost && (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '-8px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            height: '4px',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+          }}
+        >
+          <Box 
+            sx={{
+              width: `${healthPercentage}%`,
+              height: '100%',
+              backgroundColor: getHealthColor(),
+              transition: 'width 0.3s ease-in-out',
+            }}
+          />
+        </Box>
+      )}
+      
       {entity.entityType.type === "archer" && "🏹"}
       {entity.entityType.type === "cavalry" && "🐎"}
       {entity.entityType.type === "infantry" && "⚔️"}

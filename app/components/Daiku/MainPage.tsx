@@ -53,6 +53,12 @@ const customCursors = {
   infantry: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%234CAF50' fill-opacity='0.7'/%3E%3Ctext x='50' y='50' text-anchor='middle' dominant-baseline='middle' font-size='40' fill='white'%3E⚔️%3C/text%3E%3C/svg%3E") 16 16, auto`,
 };
 
+export const useCombatPhase = () => {
+  const [isCombatPhase, setIsCombatPhase] = useState(false);
+
+  return { isCombatPhase, setIsCombatPhase };
+};
+
 const MainPage = () => {
   // Get window dimensions using our custom hook
   const windowDimensions = useWindowDimensions();
@@ -105,6 +111,7 @@ const MainPage = () => {
 
   // Use enemy turn hook
   const { isEnemyTurn, setIsEnemyTurn, enemyPendingMoves, setEnemyPendingMoves } = useEnemyTurn();
+  const { isCombatPhase, setIsCombatPhase } = useCombatPhase();
 
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
@@ -179,42 +186,43 @@ const MainPage = () => {
   const executeMoves = () => {
     if (pendingMoves.size === 0 && !isEnemyTurn) return;
 
-    if (!isEnemyTurn) {
-      // Player turn - apply all pending moves to player entities
-      const updatedPlayerEntities = playerEntities.map((entity) => {
-        const pendingMove = pendingMoves.get(entity.id);
-        if (pendingMove) {
-          return {
-            ...entity,
-            position: pendingMove,
-          };
-        }
-        return entity;
-      });
+    // Player turn - apply all pending moves to player entities
+    const updatedPlayerEntities = playerEntities.map((entity) => {
+      const pendingMove = pendingMoves.get(entity.id);
+      if (pendingMove) {
+        return {
+          ...entity,
+          position: pendingMove,
+        };
+      }
+      return entity;
+    });
 
-      // Update player entities and clear pending moves
-      setPlayerEntities(updatedPlayerEntities);
-      setPendingMoves(new Map());
+    // Update player entities and clear pending moves
+    setPlayerEntities(updatedPlayerEntities);
+    setPendingMoves(new Map());
 
-      // Start enemy turn
-      setIsEnemyTurn(true);
+    // Start enemy turn
+    setIsEnemyTurn(true);
 
-      // Calculate enemy moves based on updated player positions
-      // We already have terrainMap with all terrain definitions
+    // Calculate enemy moves based on updated player positions
+    // We already have terrainMap with all terrain definitions
 
-      // Convert player entities to player positions for AI calculations
-      const playerPositions = updatedPlayerEntities.map((player) => player.position);
+    // Convert player entities to player positions for AI calculations
+    const playerPositions = updatedPlayerEntities.map((player) => player.position);
 
-      // Generate enemy moves using the enemy AI hook
-      const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap);
+    // Generate enemy moves using the enemy AI hook
+    const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap);
 
-      // Set enemy pending moves
-      setEnemyPendingMoves(enemyMoves);
+    // Set enemy pending moves
+    setEnemyPendingMoves(enemyMoves);
 
-      // Allow a delay to show it's the enemy's turn before executing their moves
-      setTimeout(() => {
-        // Execute enemy moves
-        const updatedEnemyEntities = enemyEntities.map((entity) => {
+    // Allow a delay to show it's the enemy's turn before executing their moves
+    setTimeout(() => {
+      // Execute enemy moves
+      const updatedEnemyEntities = enemyEntities.map((entity) => {
+        // Check if there's a pending move for this entity
+        if (entity.id && enemyMoves.has(entity.id)) {
           const enemyMove = enemyMoves.get(entity.id);
           if (enemyMove) {
             return {
@@ -222,40 +230,173 @@ const MainPage = () => {
               position: enemyMove,
             };
           }
-          return entity;
-        });
-
-        // Update enemy entities
-        setEnemyEntities(updatedEnemyEntities);
-        setEnemyPendingMoves(new Map());
-
-        // End enemy turn, back to player turn
-        setIsEnemyTurn(false);
-
-        // Advance to next turn
-        setCurrentTurn(currentTurn + 1);
-      }, 1500); // 1.5 second delay for visual feedback
-    } else {
-      // This case is unlikely to happen as we handle enemy moves within the player turn
-      // but it's here for completeness
-      const updatedEnemyEntities = enemyEntities.map((entity) => {
-        const enemyMove = enemyPendingMoves.get(entity.id);
-        if (enemyMove) {
-          return {
-            ...entity,
-            position: enemyMove,
-          };
         }
         return entity;
       });
 
+      // Update enemy entities
       setEnemyEntities(updatedEnemyEntities);
       setEnemyPendingMoves(new Map());
+
+      // End enemy turn, back to player turn
       setIsEnemyTurn(false);
+      setIsCombatPhase(true);
+
+      // Execute combat
+      executeCombat(updatedEnemyEntities, updatedPlayerEntities, terrainMap);
+    }, 1500); // 1.5 second delay for visual feedback
+  };
+
+  const executeCombat = (
+    enemyEntities: EnemyEntity[],
+    playerEntities: PlayerEntity[],
+    terrainMap: Map<string, TerrainType>
+  ) => {
+    // Track which enemies are attacked by which players
+    const playerAttacks = new Map<string, string>();
+    // Track which players are attacked by which enemies
+    const enemyAttacks = new Map<string, string>();
+
+    // Determine which enemies each player attacks (closest enemy)
+    playerEntities.forEach((player) => {
+      // Ensure player is valid with an id
+      if (!player || !player.id || typeof player.id !== 'string') return;
+      
+      let closestEnemy: EnemyEntity | null = null;
+      let minDistance = Infinity;
+
+      // Check all enemy entities to find the closest one
+      enemyEntities.forEach((enemy) => {
+        // Skip if enemy is invalid or missing position
+        if (!enemy || !enemy.position) return;
+        
+        const distance = calculateHexDistance(player.position, enemy.position);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestEnemy = enemy;
+        }
+      });
+
+      // Track player attack if they're adjacent to an enemy
+      if (closestEnemy && minDistance <= 1 && closestEnemy.id) {
+        playerAttacks.set(player.id, closestEnemy.id);
+      }
+    });
+
+    // Determine which players each enemy attacks (closest player)
+    enemyEntities.forEach((enemy) => {
+      // Ensure enemy is valid with an id
+      if (!enemy || !enemy.id || typeof enemy.id !== 'string') return;
+      
+      let closestPlayer: PlayerEntity | null = null;
+      let minDistance = Infinity;
+
+      // Check all player entities to find the closest one
+      playerEntities.forEach((player) => {
+        // Skip if player is invalid or missing position
+        if (!player || !player.position) return;
+        
+        const distance = calculateHexDistance(enemy.position, player.position);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPlayer = player;
+        }
+      });
+
+      // Track enemy attack if they're adjacent to a player
+      if (closestPlayer && minDistance <= 1 && closestPlayer.id) {
+        enemyAttacks.set(enemy.id, closestPlayer.id);
+      }
+    });
+
+    console.log("Combat phase: Player attacks", playerAttacks);
+    console.log("Combat phase: Enemy attacks", enemyAttacks);
+
+    setTimeout(() => {
+      // Apply damage from player attacks
+      const updatedEnemyEntities = enemyEntities.map((enemy) => {
+        // Skip if enemy doesn't have a valid ID
+        if (!enemy || !('id' in enemy) || !enemy.id) return enemy;
+        
+        // Find if this enemy was attacked by any player
+        const attackEntry = Array.from(playerAttacks.entries())
+          .find(entry => entry[1] === enemy.id);
+        
+        const attackingPlayerId = attackEntry ? attackEntry[0] : undefined;
+
+        if (attackingPlayerId) {
+          // Player attacked this enemy, reduce health by 1
+          const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
+          return {
+            ...enemy,
+            entityType: {
+              ...enemy.entityType,
+              currentHealth: Math.max(0, currentHealth - 1)
+            }
+          };
+        }
+        return enemy;
+      });
+
+      // Apply damage from enemy attacks
+      const updatedPlayerEntities = playerEntities.map((player) => {
+        // Skip if player doesn't have a valid ID
+        if (!player || !('id' in player) || !player.id) return player;
+        
+        // Find if this player was attacked by any enemy
+        const attackEntry = Array.from(enemyAttacks.entries())
+          .find(entry => entry[1] === player.id);
+        
+        const attackingEnemyId = attackEntry ? attackEntry[0] : undefined;
+
+        if (attackingEnemyId) {
+          // Enemy attacked this player, reduce health by 1
+          const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
+          return {
+            ...player,
+            entityType: {
+              ...player.entityType,
+              currentHealth: Math.max(0, currentHealth - 1)
+            }
+          };
+        }
+        return player;
+      });
+
+      // Filter out defeated entities (those with health at 0)
+      const survivingEnemyEntities = updatedEnemyEntities.filter(enemy => {
+        const health = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
+        return health > 0;
+      });
+      
+      const survivingPlayerEntities = updatedPlayerEntities.filter(player => {
+        const health = player.entityType.currentHealth ?? player.entityType.maxHealth;
+        return health > 0;
+      });
+      
+      // Update entities with new health values
+      setEnemyEntities(survivingEnemyEntities);
+      setPlayerEntities(survivingPlayerEntities as PlayerEntity[]);
+
+      // Log combat results
+      const defeatedEnemies = updatedEnemyEntities.length - survivingEnemyEntities.length;
+      const defeatedPlayers = updatedPlayerEntities.length - survivingPlayerEntities.length;
+      
+      if (defeatedEnemies > 0 || defeatedPlayers > 0) {
+        console.log(`Combat results: ${defeatedEnemies} enemies defeated, ${defeatedPlayers} players defeated`);
+      }
+
+      // End combat phase
+      setIsCombatPhase(false);
 
       // Advance to next turn
       setCurrentTurn(currentTurn + 1);
-    }
+    }, 1500); // 1.5 second delay for visual feedback
+  };
+
+  // Helper function to calculate distance between hex coordinates
+  const calculateHexDistance = (a: GridPosition, b: GridPosition): number => {
+    return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
   };
 
   // Helper function to check if an entity is at a specific position
@@ -437,6 +578,17 @@ const MainPage = () => {
         isEnemyTurn={isEnemyTurn}
         pendingMoves={pendingMoves}
         executeMoves={executeMoves}
+        getStatusMessage={() => {
+          if (isCombatPhase) {
+            return "Combat";
+          } else if (isEnemyTurn) {
+            return "Enemy Turn";
+          } else if (pendingMoves.size > 0) {
+            return "Execute Moves";
+          } else {
+            return "Select Moves";
+          }
+        }}
       />
 
       {/* Debug Buttons and Modals */}

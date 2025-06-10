@@ -4,17 +4,20 @@ import { styled } from '@mui/material/styles';
 
 // Define custom props by extending MUI's ButtonProps
 interface PixelatedButtonProps extends Omit<ButtonProps, 'variant'> {
-  // We can add custom props here if needed in the future
-  // For example: pixelSize?: number;
+  // Custom props for flexibility
+  width?: string;
+  textSize?: string;
 }
 
-const StyledButton = styled(Button)<PixelatedButtonProps>(({ theme, disabled }) => ({
+const StyledButton = styled(Button)<PixelatedButtonProps>(({ theme, disabled, width, textSize }) => ({
   fontFamily: 'var(--font-press-start-2p), Courier, monospace', // Use CSS variable for Press Start 2P
   border: '2px solid black',       // Sharp, solid border
   borderRadius: 0,                 // No rounded corners
   padding: '8px 16px',
   textTransform: 'none',           // Keep text as is
   fontWeight: 'bold',
+  width: width || 'auto',
+  fontSize: textSize || '0.875rem',
   color: disabled ? theme.palette.text.disabled : 'white',
   backgroundColor: disabled ? theme.palette.action.disabledBackground : theme.palette.primary.main,
   boxShadow: '2px 2px 0px black', // Simulates a bit of a 3D pixel effect
