@@ -3,6 +3,7 @@ import { EnemyUnitType, PlayerUnitType } from "./types";
 // Define entity types with their abilities and characteristics
 export const playerUnitTypes = {
   archer: {
+    name: "Archer",
     type: "archer" as PlayerUnitType,
     color: "#FF5252", // Red
     spriteSheetSprite: {
@@ -14,17 +15,22 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
-    attack: 1, // Archer has 1 attack
+    combat: {
+      power: 4, // High attack power (when close)
+      distance: 3, // High range
+      defense: 1, // Low defense
+      agility: 2, // Medium agility
+    },
     minHealth: 1,
     maxHealth: 3,
     abilities: {
-      extraRangeInMountains: true,
-      poorRangeInForests: true,
+      greatRangeInMountains: true,
       canShootOverWater: true,
-      poorDefense: true,
+      poorRangeInForests: true,
     },
   },
   cavalry: {
+    name: "Cavalry",
     type: "cavalry" as PlayerUnitType,
     color: "#448AFF", // Blue
     spriteSheetSprite: {
@@ -36,15 +42,23 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
-    attack: 2, // Cavalry has 2 attack
+    combat: {
+      power: 2, // Medium attack power
+      distance: 2, // Medium range
+      defense: 2, // Medium defense
+      agility: 3, // High agility
+    },
     minHealth: 2,
     maxHealth: 4,
     abilities: {
-      poorInForests: true,
-      greatInGrass: true,
+      poorAttackInForests: true,
+      greatAttackInGrass: true,
+      poorAttackInMountains: true,
+      poorMovementInForests: true,
     },
   },
   infantry: {
+    name: "Infantry",
     type: "infantry" as PlayerUnitType,
     color: "#66BB6A", // Green
     spriteSheetSprite: {
@@ -55,16 +69,23 @@ export const playerUnitTypes = {
       height: 94,
       singleImage: false,
     },
-    movement: 1, // 1 tile per turn
-    attack: 3, // Infantry has 3 attack
+    movement: 1, // 1 tiles per turn
+    combat: {
+      power: 3, // High attack power
+      distance: 1, // Low range
+      defense: 3, // High defense
+      agility: 1, // Low agility
+    },
     minHealth: 3,
     maxHealth: 5,
     abilities: {
-      highDefense: true,
-      closeRangeBrawler: true,
+      greatAttackInForests: true,
+      poorAttackInMountains: true,
+      poorMovementInMountains: true,
     },
   },
   mage: {
+    name: "Mage",
     type: "mage" as PlayerUnitType,
     color: "#448AFF", // Blue
     spriteSheetSprite: {
@@ -76,19 +97,26 @@ export const playerUnitTypes = {
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
-    attack: 3, // Base attack is 3, but special calculation applies
+    combat: {
+      power: 3, // High attack power
+      distance: 4, // Highest range
+      defense: 1, // Low defense
+      agility: 2, // Medium agility
+    },
     minHealth: 1,
     maxHealth: 2,
     abilities: {
-      poorDefense: true,
-      canCastFireball: true,
       canCastHealing: true,
+      greatAttackInMountains: true,
+      poorAttackInForests: true,
+      canShootOverWater: true,
     },
   },
 };
 
 export const enemyUnitTypes = {
   clobbin: {
+    name: "Clobbin",
     type: "clobbin" as EnemyUnitType,
     color: "#FF9800", // Orange
     spriteSheetSprite: {
@@ -100,17 +128,22 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
-    attack: 2, // 2 attack points
+    combat: {
+      power: 2, // Medium attack power
+      distance: 2, // Medium range
+      defense: 2, // Medium defense
+      agility: 2, // Medium agility
+    },
     minHealth: 2,
     maxHealth: 4,
     abilities: {
       extraRangeInMountains: true,
       poorRangeInForests: true,
       canShootOverWater: true,
-      poorDefense: true,
     },
   },
   spuddle: {
+    name: "Spuddle",
     type: "spuddle" as EnemyUnitType,
     color: "#FFC107", // Yellow
     spriteSheetSprite: {
@@ -122,7 +155,12 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 0, // Does not move, only in water tiles
-    attack: 1, // 1 attack point
+    combat: {
+      power: 1, // Low attack power
+      distance: 2, // Medium range
+      defense: 1, // Low defense
+      agility: 1, // Low agility
+    },
     minHealth: 1,
     maxHealth: 3,
     abilities: {
@@ -130,6 +168,7 @@ export const enemyUnitTypes = {
     },
   },
   skritcher: {
+    name: "Skritcher",
     type: "skritcher" as EnemyUnitType,
     color: "#E91E63", // Magenta
     spriteSheetSprite: {
@@ -141,7 +180,12 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
-    attack: 2, // 2 attack points
+    combat: {
+      power: 2, // Medium attack power
+      distance: 1, // Low range
+      defense: 3, // High defense
+      agility: 1, // Low agility
+    },
     minHealth: 2,
     maxHealth: 4,
     abilities: {
@@ -150,6 +194,7 @@ export const enemyUnitTypes = {
     },
   },
   whumble: {
+    name: "Whumble",
     type: "whumble" as EnemyUnitType,
     color: "#9C27B0", // Purple
     spriteSheetSprite: {
@@ -161,7 +206,12 @@ export const enemyUnitTypes = {
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
-    attack: 3, // 3 attack points
+    combat: {
+      power: 3, // High attack power
+      distance: 1, // Low range
+      defense: 3, // High defense
+      agility: 1, // Low agility
+    },
     minHealth: 3,
     maxHealth: 5,
     abilities: {

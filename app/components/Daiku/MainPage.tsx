@@ -12,7 +12,7 @@ import {
   TerrainType,
 } from "./utils/types";
 import Entity from "./components/Entity";
-import { executeCombat } from "./utils/combatUtils";
+import { executeCombat } from "./utils/combatUtils/executeCombat";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
 import { generateHexPoints } from "./utils/hexMath";
@@ -263,7 +263,8 @@ const MainPage = () => {
           // End combat phase
           setIsCombatPhase(false);
         },
-        addLogEntry
+        addLogEntry,
+        currentTurn
       );
     }, 1500); // 1.5 second delay for visual feedback
 
@@ -429,7 +430,7 @@ const MainPage = () => {
             } else {
               // For player entities, handle normal selection flow
               const playerEntity = entity as PlayerEntity;
-              
+
               // Don't allow selecting defeated entities
               if (playerEntity.defeated) {
                 console.log("This entity has been defeated and cannot be selected.");

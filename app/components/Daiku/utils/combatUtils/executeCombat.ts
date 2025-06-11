@@ -1,92 +1,7 @@
-import {
-  GridPosition,
-  EntityDefinition,
-  TerrainType,
-  PlayerEntity,
-  EnemyEntity,
-  TerrainDefinition,
-} from "./types";
-
-/**
- * Calculate the distance between two grid positions in a hex grid
- * @param pos1 First position
- * @param pos2 Second position
- * @returns Number of hexes distance
- */
-export const calculateHexDistance = (pos1: GridPosition, pos2: GridPosition): number => {
-  // Using the axial coordinate system, distance is calculated as:
-  // max(abs(q1-q2), abs(r1-r2), abs(q1+r1-q2-r2))
-  return Math.max(
-    Math.abs(pos1.q - pos2.q),
-    Math.abs(pos1.r - pos2.r),
-    Math.abs(pos1.q + pos1.r - pos2.q - pos2.r)
-  );
-};
-
-/**
- * Calculate attack damage based on attacker, target position, and terrain
- * @param attacker The attacking entity
- * @param attackerPos Position of the attacker
- * @param targetPos Position of the target
- * @param targetTerrainType Terrain type where the target is located
- * @returns Calculated attack damage (minimum 0)
- */
-export const calculateAttackDamage = (
-  attacker: EntityDefinition,
-  attackerPos: GridPosition,
-  targetPos: GridPosition,
-  targetTerrainType: TerrainType
-): number => {
-  // For regular units, use their base attack value
-  if (attacker.type !== "mage") {
-    return attacker.attack;
-  }
-
-  // Special calculation for mage
-  let damage = attacker.attack; // Base attack is 3
-
-  // Apply terrain modifier
-  if (targetTerrainType === "water" || targetTerrainType === "forest") {
-    damage -= 2; // Loses 2 points in water or forest
-  }
-
-  // Apply distance modifier
-  const distance = calculateHexDistance(attackerPos, targetPos);
-  if (distance > 1) {
-    damage -= distance - 1; // Loses 1 point for each hex beyond 1
-  }
-
-  // Ensure damage is not negative
-  return Math.max(0, damage);
-};
-
-/**
- * Check if a target is within attack range
- * @param attacker The attacking entity
- * @param attackerPos Position of the attacker
- * @param targetPos Position of the target
- * @returns Boolean indicating if target is within attack range
- */
-export const isTargetInRange = (
-  attacker: EntityDefinition,
-  attackerPos: GridPosition,
-  targetPos: GridPosition
-): boolean => {
-  const distance = calculateHexDistance(attackerPos, targetPos);
-
-  // Different units have different attack ranges
-  switch (attacker.type) {
-    case "archer":
-      return distance <= 3; // Archers can attack up to 3 tiles away
-    case "mage":
-      return distance <= 4; // Mages can attack up to 4 tiles away
-    case "cavalry":
-      return distance <= 2; // Cavalry can attack up to 2 tiles away
-    case "infantry":
-    default:
-      return distance <= 1; // Infantry and others can only attack adjacent tiles
-  }
-};
+import { calculateHexDistance } from ".";
+import { calculateAttackDamage } from "./calculateAttackDamage";
+import { generateEventMessage } from "./generateEventMessage";
+import { EnemyEntity, PlayerEntity, TerrainDefinition } from "../types";
 
 /**
  * Executes the combat phase between player and enemy entities
@@ -96,13 +11,15 @@ export const isTargetInRange = (
  * @param terrainMap Map of terrain types by position key
  * @param combatResultCallback Function called after combat resolution with updated entities and results
  * @param logEvent Optional function to log events
+ * @param roundNumber Optional round number for logging
  */
 export const executeCombat = (
   enemyEntities: EnemyEntity[],
   playerEntities: PlayerEntity[],
   terrainMap: Map<string, TerrainDefinition>,
   combatResultCallback: (enemies: EnemyEntity[], players: PlayerEntity[]) => void,
-  logEvent?: (message: string) => void
+  logEvent?: (message: string) => void,
+  roundNumber?: number
 ) => {
   // Use optional logEvent function if provided
   const log = (message: string) => {
@@ -110,8 +27,6 @@ export const executeCombat = (
       logEvent(message);
     }
   };
-
-  log("🔥 Combat phase begins! 🔥");
 
   // Track which enemies are attacked by which players
   const playerAttacks = new Map<string, string>();
@@ -123,6 +38,8 @@ export const executeCombat = (
     // Ensure player is valid with an id and not defeated
     if (!player || !player.id || typeof player.id !== "string" || player.defeated) return;
 
+    console.log("Player", player.id, "is not defeated and searching for the closest enemy");
+
     let closestEnemy: EnemyEntity | undefined;
     let minDistance = 10;
 
@@ -132,15 +49,48 @@ export const executeCombat = (
       if (!enemy || !enemy.position || enemy.defeated) return;
 
       const distance = calculateHexDistance(player.position, enemy.position);
+      console.log("Enemy", enemy.id, "is ", distance, "hexes away");
       if (distance < minDistance) {
+        console.log("This is the closest enemy so far");
         minDistance = distance;
+        if (closestEnemy) {
+          console.log("Closest enemy was", closestEnemy.id);
+        }
         closestEnemy = enemy;
       }
     });
 
+    const playerCurrentCombatRange = () => {
+      let attackRange = player.entityType.combat.distance;
+      const terrainType = terrainMap.get(`${player.position.q},${player.position.r}`)?.type;
+      if (terrainType === "forest" && player.entityType.abilities.poorRangeInForests) {
+        attackRange -= 1;
+      }
+      if (terrainType === "forest" && player.entityType.abilities.greatRangeInForests) {
+        attackRange += 1;
+      }
+      if (terrainType === "mountain" && player.entityType.abilities.greatRangeInMountains) {
+        attackRange += 2;
+      }
+      if (terrainType === "grass" && player.entityType.abilities.greatRangeInGrass) {
+        attackRange += 1;
+      }
+      return attackRange;
+    };
+
+    console.log("attack range for player", player.id, "is", playerCurrentCombatRange());
+
     // Track player attack if they're adjacent to an enemy
-    if (closestEnemy && minDistance <= 1 && "id" in closestEnemy && closestEnemy.id) {
+    if (
+      closestEnemy &&
+      minDistance <= playerCurrentCombatRange() &&
+      "id" in closestEnemy &&
+      closestEnemy.id
+    ) {
+      console.log("Player", player.id, "attacks enemy", closestEnemy.id);
       playerAttacks.set(player.id, closestEnemy.id);
+
+      console.log("Player attacks", playerAttacks);
     }
   });
 
@@ -184,18 +134,38 @@ export const executeCombat = (
 
       const attackingPlayerId = attackEntry ? attackEntry[0] : undefined;
 
-      // If this enemy was attacked, reduce its health by 1
+      // If this enemy was attacked, calculate damage
       if (attackingPlayerId !== undefined) {
-        // Player attacked this enemy, reduce health by 1
-        const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-        const newHealth = Math.max(0, currentHealth - 1);
-
+        // Player attacked this enemy
         const attackingPlayer = playerEntities.find((p) => p.id === attackingPlayerId);
-        const attackerName = attackingPlayer?.entityType.type ?? "Unknown";
-        const targetName = enemy.entityType.type;
-        log(
-          `${attackerName} attacks ${targetName} for 1 damage! (${currentHealth} → ${newHealth})`
+
+        if (!attackingPlayer || !enemy) return enemy;
+
+        const terrainType = terrainMap.get(`${enemy.position.q},${enemy.position.r}`)?.type;
+
+        if (!terrainType) return enemy;
+
+        // Calculate damage based on player's combat power and enemy's defense
+        let damage = calculateAttackDamage(
+          attackingPlayer.entityType,
+          attackingPlayer.position,
+          enemy.position,
+          terrainType,
+          enemy.entityType.combat.defense
         );
+
+        const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
+        const newHealth = Math.max(0, currentHealth - damage);
+        const attackerName = attackingPlayer?.entityType.name ?? "Unknown";
+        const targetName = enemy.entityType.name;
+        const eventMessage = generateEventMessage(
+          attackingPlayer,
+          enemy,
+          damage,
+          currentHealth,
+          newHealth
+        );
+        log(eventMessage);
 
         if (newHealth <= 0) {
           log(`${targetName} has been defeated!`);
@@ -225,18 +195,27 @@ export const executeCombat = (
 
       const attackingEnemyId = attackEntry ? attackEntry[0] : undefined;
 
-      // If this player was attacked, reduce their health by 1
+      // If this player was attacked, calculate damage and reduce health
       if (attackingEnemyId !== undefined) {
-        // Enemy attacked this player, reduce health by 1
-        const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
-        const newHealth = Math.max(0, currentHealth - 1);
-
+        // Enemy attacked this player
         const attackingEnemy = enemyEntities.find((e) => e.id === attackingEnemyId);
+
+        if (!attackingEnemy) return player;
+
+        // Calculate damage based on enemy's combat power and player's defense
+        let damage = calculateAttackDamage(
+          attackingEnemy.entityType,
+          attackingEnemy.position,
+          player.position,
+          player.entityType.abilities.canShootOverWater ? "water" : "grass",
+          player.entityType.combat.defense
+        ); // Default damage
+
+        const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
+        const newHealth = Math.max(0, currentHealth - damage);
         const attackerName = attackingEnemy?.entityType.type ?? "Unknown";
         const targetName = player.id;
-        log(
-          `${attackerName} attacks ${targetName} for 1 damage! (${currentHealth} → ${newHealth})`
-        );
+        log(generateEventMessage(attackingEnemy, player, damage, currentHealth, newHealth));
 
         if (newHealth <= 0) {
           log(`${targetName} has been defeated!`);
@@ -281,16 +260,10 @@ export const executeCombat = (
     const defeatedPlayers = initialPlayerCount - updatedPlayerEntities.length;
 
     log(
-      `Combat phase ended with ${initialEnemyCount - updatedEnemyEntities.length} enemies and ${
-        initialPlayerCount - updatedPlayerEntities.length
-      } players defeated.`
+      `Round ${roundNumber} ended with ${
+        initialEnemyCount - updatedEnemyEntities.length
+      } enemies and ${initialPlayerCount - updatedPlayerEntities.length} players defeated.`
     );
-
-    if (defeatedEnemies > 0 || defeatedPlayers > 0) {
-      log(
-        `Combat results: ${defeatedEnemies} enemies defeated, ${defeatedPlayers} players defeated`
-      );
-    }
 
     // Call callback with final results
     combatResultCallback(updatedEnemyEntities, updatedPlayerEntities);

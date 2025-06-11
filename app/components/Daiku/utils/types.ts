@@ -36,30 +36,46 @@ export type EnemyUnitType = "clobbin" | "spettle" | "skritcher" | "whumble";
 export type EntityType = PlayerUnitType | EnemyUnitType;
 
 export interface EntityDefinition {
+  name: string;
   type: EntityType;
   color: string;
   sprite?: string; // Path to entity sprite image
   spriteSheetSprite?: SpriteSheetSprite;
   movement: number;
-  // Attack value
-  attack: number;
+  // Combat attributes
+  combat: {
+    power: number; // Attack strength
+    distance: number; // Attack range in hexes
+    defense: number; // Defensive capabilities
+    agility: number; // Evasion/mobility aspects
+  };
   // Health attributes
   minHealth: number;
   maxHealth: number;
   currentHealth?: number; // Optional current health, defaults to maxHealth if not set
   // Special abilities and characteristics
   abilities: {
-    extraRangeInMountains?: boolean;
+    greatRangeInMountains?: boolean;
+    greatRangeInForests?: boolean;
     poorRangeInForests?: boolean;
+    greatRangeInGrass?: boolean;
     canShootOverWater?: boolean;
-    poorDefense?: boolean;
-    poorInForests?: boolean;
-    greatInGrass?: boolean;
-    highDefense?: boolean;
-    closeRangeBrawler?: boolean;
+    poorAttackInForests?: boolean;
+    greatAttackInForests?: boolean;
+    poorAttackInGrass?: boolean;
+    greatAttackInGrass?: boolean;
+    poorAttackInMountains?: boolean;
+    greatAttackInMountains?: boolean;
+    poorAttackInWater?: boolean;
+    greatAttackInWater?: boolean;
     waterOnly?: boolean; // For entities that can only exist on water tiles
     canCastHealing?: boolean;
-    canCastFireball?: boolean;
+    poorMovementInForests?: boolean;
+    greatMovementInForests?: boolean;
+    poorMovementInMountains?: boolean;
+    greatMovementInMountains?: boolean;
+    poorMovementInWater?: boolean;
+    greatMovementInWater?: boolean;
   };
 }
 
@@ -68,18 +84,12 @@ export interface PlayerEntity {
   id: string;
   position: GridPosition;
   entityType: EntityDefinition;
-  isEnemy?: false;
+  isEnemy?: boolean;
   defeated?: boolean;
 }
 
 // Enemy entity with position
-export interface EnemyEntity {
-  id: string;
-  position: GridPosition;
-  entityType: EntityDefinition;
-  isEnemy: true;
-  defeated?: boolean;
-}
+export interface EnemyEntity extends PlayerEntity {}
 
 // Combined entity type
 export type GameEntity = PlayerEntity | EnemyEntity;
