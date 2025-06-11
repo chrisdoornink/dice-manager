@@ -26,7 +26,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
   if (entity) {
     return (
       <g key={`entity-${entity.id}`}>
-        <foreignObject x="10" y="-10" width="80" height="130">
+        <foreignObject x="5" y="-5" width="90" height="100">
           <Entity
             entity={entity}
             isSelected={!!(selectedEntity && selectedEntity.id === entity.id)}
@@ -43,7 +43,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
   if (pendingEntity) {
     return (
       <g key={`ghost-${pendingEntity.id}`}>
-        <foreignObject x="10" y="-10" width="80" height="130">
+        <foreignObject x="5" y="-5" width="90" height="100">
           <Entity entity={pendingEntity} isGhost={true} isPendingMove={true} />
         </foreignObject>
       </g>
