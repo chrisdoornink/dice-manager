@@ -8,7 +8,7 @@ export const playerUnitTypes = {
     color: "#FF5252", // Red
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 127, // Third sprite in first row (0-indexed)
+      x: 100, // Third sprite in first row (0-indexed)
       y: 0, // First row
       width: 54,
       height: 94,
@@ -35,7 +35,7 @@ export const playerUnitTypes = {
     color: "#448AFF", // Blue
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 57, // Second sprite in first row (0-indexed)
+      x: 75, // Second sprite in first row (0-indexed)
       y: 0,
       width: 73,
       height: 94,
@@ -90,7 +90,7 @@ export const playerUnitTypes = {
     color: "#448AFF", // Blue
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 174,
+      x: 154,
       y: 0,
       width: 56,
       height: 94,
@@ -122,7 +122,7 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 0, // First sprite in bottom half
-      y: 114, // Second row
+      y: 95, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -149,7 +149,7 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 54, // Second sprite in second row
-      y: 114, // Second row
+      y: 95, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -174,7 +174,7 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 110, // Third sprite in second row
-      y: 114, // Second row
+      y: 105, // Second row
       width: 64,
       height: 64,
       singleImage: false,
@@ -200,7 +200,7 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 164, // Fourth sprite in second row
-      y: 124, // Second row
+      y: 105, // Second row
       width: 64,
       height: 64,
       singleImage: false,
