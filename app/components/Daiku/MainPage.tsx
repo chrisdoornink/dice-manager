@@ -9,8 +9,10 @@ import {
   EnemyEntity,
   GameEntity,
   HexagonData,
+  TerrainType,
 } from "./utils/types";
 import Entity from "./components/Entity";
+import { executeCombat } from "./utils/combatUtils";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
 import { getNeighboringTiles } from "./utils/getNeigboringTiles";
 import { generateHexPoints } from "./utils/hexMath";
@@ -242,155 +244,25 @@ const MainPage = () => {
       setIsEnemyTurn(false);
       setIsCombatPhase(true);
 
-      // Execute combat
-      executeCombat(updatedEnemyEntities, updatedPlayerEntities, terrainMap);
-    }, 1500); // 1.5 second delay for visual feedback
-  };
+      // Execute combat using imported utility function
+      executeCombat(
+        updatedEnemyEntities, 
+        updatedPlayerEntities, 
+        terrainMap, 
+        (survivingEnemyEntities: EnemyEntity[], survivingPlayerEntities: PlayerEntity[], defeatedEnemies: number, defeatedPlayers: number) => {
+          // Update entities with new health values
+          setEnemyEntities(survivingEnemyEntities);
+          setPlayerEntities(survivingPlayerEntities);
 
-  const executeCombat = (
-    enemyEntities: EnemyEntity[],
-    playerEntities: PlayerEntity[],
-    terrainMap: Map<string, TerrainType>
-  ) => {
-    // Track which enemies are attacked by which players
-    const playerAttacks = new Map<string, string>();
-    // Track which players are attacked by which enemies
-    const enemyAttacks = new Map<string, string>();
+          // Log combat results
+          if (defeatedEnemies > 0 || defeatedPlayers > 0) {
+            console.log(`Combat results: ${defeatedEnemies} enemies defeated, ${defeatedPlayers} players defeated`);
+          }
 
-    // Determine which enemies each player attacks (closest enemy)
-    playerEntities.forEach((player) => {
-      // Ensure player is valid with an id
-      if (!player || !player.id || typeof player.id !== 'string') return;
-      
-      let closestEnemy: EnemyEntity | null = null;
-      let minDistance = Infinity;
-
-      // Check all enemy entities to find the closest one
-      enemyEntities.forEach((enemy) => {
-        // Skip if enemy is invalid or missing position
-        if (!enemy || !enemy.position) return;
-        
-        const distance = calculateHexDistance(player.position, enemy.position);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestEnemy = enemy;
+          // End combat phase
+          setIsCombatPhase(false);
         }
-      });
-
-      // Track player attack if they're adjacent to an enemy
-      if (closestEnemy && minDistance <= 1 && closestEnemy.id) {
-        playerAttacks.set(player.id, closestEnemy.id);
-      }
-    });
-
-    // Determine which players each enemy attacks (closest player)
-    enemyEntities.forEach((enemy) => {
-      // Ensure enemy is valid with an id
-      if (!enemy || !enemy.id || typeof enemy.id !== 'string') return;
-      
-      let closestPlayer: PlayerEntity | null = null;
-      let minDistance = Infinity;
-
-      // Check all player entities to find the closest one
-      playerEntities.forEach((player) => {
-        // Skip if player is invalid or missing position
-        if (!player || !player.position) return;
-        
-        const distance = calculateHexDistance(enemy.position, player.position);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestPlayer = player;
-        }
-      });
-
-      // Track enemy attack if they're adjacent to a player
-      if (closestPlayer && minDistance <= 1 && closestPlayer.id) {
-        enemyAttacks.set(enemy.id, closestPlayer.id);
-      }
-    });
-
-    console.log("Combat phase: Player attacks", playerAttacks);
-    console.log("Combat phase: Enemy attacks", enemyAttacks);
-
-    setTimeout(() => {
-      // Apply damage from player attacks
-      const updatedEnemyEntities = enemyEntities.map((enemy) => {
-        // Skip if enemy doesn't have a valid ID
-        if (!enemy || !('id' in enemy) || !enemy.id) return enemy;
-        
-        // Find if this enemy was attacked by any player
-        const attackEntry = Array.from(playerAttacks.entries())
-          .find(entry => entry[1] === enemy.id);
-        
-        const attackingPlayerId = attackEntry ? attackEntry[0] : undefined;
-
-        if (attackingPlayerId) {
-          // Player attacked this enemy, reduce health by 1
-          const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-          return {
-            ...enemy,
-            entityType: {
-              ...enemy.entityType,
-              currentHealth: Math.max(0, currentHealth - 1)
-            }
-          };
-        }
-        return enemy;
-      });
-
-      // Apply damage from enemy attacks
-      const updatedPlayerEntities = playerEntities.map((player) => {
-        // Skip if player doesn't have a valid ID
-        if (!player || !('id' in player) || !player.id) return player;
-        
-        // Find if this player was attacked by any enemy
-        const attackEntry = Array.from(enemyAttacks.entries())
-          .find(entry => entry[1] === player.id);
-        
-        const attackingEnemyId = attackEntry ? attackEntry[0] : undefined;
-
-        if (attackingEnemyId) {
-          // Enemy attacked this player, reduce health by 1
-          const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
-          return {
-            ...player,
-            entityType: {
-              ...player.entityType,
-              currentHealth: Math.max(0, currentHealth - 1)
-            }
-          };
-        }
-        return player;
-      });
-
-      // Filter out defeated entities (those with health at 0)
-      const survivingEnemyEntities = updatedEnemyEntities.filter(enemy => {
-        const health = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-        return health > 0;
-      });
-      
-      const survivingPlayerEntities = updatedPlayerEntities.filter(player => {
-        const health = player.entityType.currentHealth ?? player.entityType.maxHealth;
-        return health > 0;
-      });
-      
-      // Update entities with new health values
-      setEnemyEntities(survivingEnemyEntities);
-      setPlayerEntities(survivingPlayerEntities as PlayerEntity[]);
-
-      // Log combat results
-      const defeatedEnemies = updatedEnemyEntities.length - survivingEnemyEntities.length;
-      const defeatedPlayers = updatedPlayerEntities.length - survivingPlayerEntities.length;
-      
-      if (defeatedEnemies > 0 || defeatedPlayers > 0) {
-        console.log(`Combat results: ${defeatedEnemies} enemies defeated, ${defeatedPlayers} players defeated`);
-      }
-
-      // End combat phase
-      setIsCombatPhase(false);
-
-      // Advance to next turn
-      setCurrentTurn(currentTurn + 1);
+      );
     }, 1500); // 1.5 second delay for visual feedback
   };
 
