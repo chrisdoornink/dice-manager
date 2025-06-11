@@ -120,16 +120,16 @@ export const executeCombat = (
 
   // Determine which enemies each player attacks (closest enemy)
   playerEntities.forEach((player) => {
-    // Ensure player is valid with an id
-    if (!player || !player.id || typeof player.id !== "string") return;
+    // Ensure player is valid with an id and not defeated
+    if (!player || !player.id || typeof player.id !== "string" || player.defeated) return;
 
     let closestEnemy: EnemyEntity | undefined;
     let minDistance = 10;
 
     // Check all enemy entities to find the closest one
     enemyEntities.forEach((enemy) => {
-      // Skip if enemy is invalid or missing position
-      if (!enemy || !enemy.position) return;
+      // Skip if enemy is invalid, missing position, or defeated
+      if (!enemy || !enemy.position || enemy.defeated) return;
 
       const distance = calculateHexDistance(player.position, enemy.position);
       if (distance < minDistance) {
@@ -146,16 +146,16 @@ export const executeCombat = (
 
   // Determine which players each enemy attacks (closest player)
   enemyEntities.forEach((enemy) => {
-    // Ensure enemy is valid with an id
-    if (!enemy || !enemy.id || typeof enemy.id !== "string") return;
+    // Ensure enemy is valid with an id and not defeated
+    if (!enemy || !enemy.id || typeof enemy.id !== "string" || enemy.defeated) return;
 
     let closestPlayer: PlayerEntity | undefined;
     let minDistance = 10;
 
     // Check all player entities to find the closest one
     playerEntities.forEach((player) => {
-      // Skip if player is invalid or missing position
-      if (!player || !player.position) return;
+      // Skip if player is invalid, missing position, or defeated
+      if (!player || !player.position || player.defeated) return;
 
       const distance = calculateHexDistance(enemy.position, player.position);
       if (distance < minDistance) {
@@ -174,8 +174,8 @@ export const executeCombat = (
   setTimeout(() => {
     // Apply damage from player attacks
     const updatedEnemyEntities = enemyEntities.map((enemy) => {
-      // Skip invalid enemies
-      if (!enemy || !("id" in enemy) || !enemy.id) return enemy;
+      // Skip invalid or already defeated enemies
+      if (!enemy || !("id" in enemy) || !enemy.id || enemy.defeated) return enemy;
 
       // Find if this enemy was attacked by any player
       const attackEntry = Array.from(playerAttacks.entries()).find(
@@ -186,8 +186,6 @@ export const executeCombat = (
 
       // If this enemy was attacked, reduce its health by 1
       if (attackingPlayerId !== undefined) {
-        log(`Enemy ${enemy.id} was attacked by Player ${attackingPlayerId}`);
-
         // Player attacked this enemy, reduce health by 1
         const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
         const newHealth = Math.max(0, currentHealth - 1);
@@ -217,8 +215,8 @@ export const executeCombat = (
 
     // Apply damage from enemy attacks
     const updatedPlayerEntities = playerEntities.map((player) => {
-      // Skip invalid players
-      if (!player || !player.id) return player;
+      // Skip invalid or already defeated players
+      if (!player || !player.id || player.defeated) return player;
 
       // Find if this player was attacked by any enemy
       const attackEntry = Array.from(enemyAttacks.entries()).find(
@@ -229,8 +227,6 @@ export const executeCombat = (
 
       // If this player was attacked, reduce their health by 1
       if (attackingEnemyId !== undefined) {
-        log(`Player ${player.id} was attacked by Enemy ${attackingEnemyId}`);
-
         // Enemy attacked this player, reduce health by 1
         const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
         const newHealth = Math.max(0, currentHealth - 1);

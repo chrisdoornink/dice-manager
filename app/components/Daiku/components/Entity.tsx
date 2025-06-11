@@ -29,6 +29,27 @@ const Entity: React.FC<EntityProps> = ({
   onClick,
   style = {},
 }) => {
+  // If entity is defeated, render a gravestone emoji
+  if (entity.defeated) {
+    return (
+      <Box
+        sx={{
+          width: `${size}px`,
+          height: `${size}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "36px", // Large emoji size
+          filter: "drop-shadow(0 0 2px rgba(0,0,0,0.5))",
+          opacity: 0.9,
+          ...style,
+        }}
+      >
+        {/* Gravestone emoji */}
+        🪦
+      </Box>
+    );
+  }
   // Determine the appropriate styling based on the entity state
   const getFilter = () => {
     if (isSelected) return "drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 1px #000000)";

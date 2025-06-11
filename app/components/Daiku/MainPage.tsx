@@ -429,6 +429,12 @@ const MainPage = () => {
             } else {
               // For player entities, handle normal selection flow
               const playerEntity = entity as PlayerEntity;
+              
+              // Don't allow selecting defeated entities
+              if (playerEntity.defeated) {
+                console.log("This entity has been defeated and cannot be selected.");
+                return;
+              }
 
               // If already selected, deselect
               if (selectedEntity && selectedEntity.id === playerEntity.id) {
