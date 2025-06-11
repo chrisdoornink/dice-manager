@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Daiku",
   description: "Your daily combat simulator",
+  viewport: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
 };
 
 export default function RootLayout({
@@ -16,6 +17,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" style={{ backgroundColor: "var(--background-color)" }}>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+      </head>
       <body className={inter.className}>
         <GoogleAnalytics />
         {children}
