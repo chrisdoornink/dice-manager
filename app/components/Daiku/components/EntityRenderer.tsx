@@ -1,6 +1,6 @@
-import React from "react";
-import { GridPosition, PlayerEntity, GameEntity } from "../utils/types";
-import Entity from "./Entity";
+import React from 'react';
+import { GridPosition, PlayerEntity, GameEntity } from '../utils/types';
+import Entity from './Entity';
 
 interface EntityRendererProps {
   position: GridPosition;
@@ -26,7 +26,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
   if (entity) {
     return (
       <g key={`entity-${entity.id}`}>
-        <foreignObject x="18%" y="-5%" width="90%" height="110%">
+        <foreignObject x="10" y="-10" width="80" height="130">
           <Entity
             entity={entity}
             isSelected={!!(selectedEntity && selectedEntity.id === entity.id)}
@@ -40,10 +40,10 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
 
   // Show ghost preview of pending moves
   const pendingEntity = getEntityWithPendingMoveTo(position);
-  if (pendingEntity && pendingMoves.has(pendingEntity.id)) {
+  if (pendingEntity) {
     return (
       <g key={`ghost-${pendingEntity.id}`}>
-        <foreignObject x="18%" y="-5%" width="90%" height="110%">
+        <foreignObject x="10" y="-10" width="80" height="130">
           <Entity entity={pendingEntity} isGhost={true} isPendingMove={true} />
         </foreignObject>
       </g>
