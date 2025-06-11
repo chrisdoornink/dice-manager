@@ -19,7 +19,6 @@ import { generateHexPoints } from "./utils/hexMath";
 import { TERRAIN_TYPES } from "./utils/generateTerrainMap";
 import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
 import SpriteDebugModal from "./components/SpriteDebugModal";
-import HealthDebugModal from "./components/HealthDebugModal";
 import Button from "@mui/material/Button";
 import CombatLogOverlay from "./components/CombatLogOverlay";
 import useCombatLog from "./hooks/useCombatLog";
@@ -475,25 +474,6 @@ const MainPage = () => {
 
       {/* Combat Log Overlay */}
       <CombatLogOverlay logEntries={logEntries} />
-
-      {/* Debug Buttons and Modals */}
-      <Button
-        variant="outlined"
-        onClick={() => setIsHealthDebugModalOpen(true)}
-        sx={{ mr: 1, position: "absolute", top: 80, right: 165, zIndex: 1300 }} // Adjusted positioning
-      >
-        Debug Health
-      </Button>
-      <HealthDebugModal
-        open={isHealthDebugModalOpen}
-        onClose={() => setIsHealthDebugModalOpen(false)}
-        players={playerEntities}
-        enemies={enemiesForDebug}
-      />
-      <SpriteDebugModal
-        open={isSpriteDebugModalOpen}
-        onClose={() => setIsSpriteDebugModalOpen(false)}
-      />
     </Container>
   );
 };

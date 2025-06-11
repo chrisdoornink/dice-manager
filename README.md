@@ -1,14 +1,15 @@
-# Dice Manager
+# Daiku
 
-A modern, intuitive dice rolling manager for tabletop games. Built with Next.js and Material-UI.
+A tactical hex-based combat simulator game. Originally created as a dice manager for tabletop games, this project has evolved into Daiku, a turn-based strategy game with detailed combat mechanics. Built with Next.js and Material-UI.
 
 ## Features
 
-- Roll multiple dice simultaneously
-- Save and load dice presets
-- Lock specific dice values
-- View roll history
-- Mobile-friendly interface
+- Hex-based tactical combat system
+- Various unit types with unique combat attributes
+- Terrain effects on combat
+- Turn-based gameplay with movement and combat phases
+- Detailed combat logging system
+- Health and damage tracking
 
 ## Tech Stack
 
@@ -50,12 +51,23 @@ npm start
 
 ## Deployment
 
-This project can be deployed to any platform that supports Next.js:
+This application is deployed to [dicemanager.com](https://dicemanager.com) via Vercel.
 
-- Vercel (Recommended)
-- Netlify
-- AWS
-- Digital Ocean
+Deployment happens automatically when changes are merged to the `main` branch on GitHub. The process follows these steps:
+
+1. Code changes are pushed to the `main` branch
+2. Vercel automatically detects the changes and triggers a new build
+3. The application is deployed to the production environment
+
+Manual deployments can also be performed using the Vercel CLI:
+
+```bash
+npm install -g vercel # If you don't have the Vercel CLI installed
+vercel # Deploy to preview environment
+vercel --prod # Deploy to production
+```
+
+While the domain is still dicemanager.com, the application has been repurposed to focus on the Daiku combat simulator. The repository structure maintains some references to the original dice manager functionality for historical reasons.
 
 ## Environment Variables
 
