@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { CombatLogEntry } from '../hooks/useCombatLog';
 
@@ -7,8 +7,19 @@ interface CombatLogOverlayProps {
 }
 
 const CombatLogOverlay: React.FC<CombatLogOverlayProps> = ({ logEntries }) => {
+  // Create a ref for the container element
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to bottom when log entries change
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logEntries]);
+  
   return (
     <Paper
+      ref={logContainerRef}
       elevation={3}
       sx={{
         position: 'fixed',

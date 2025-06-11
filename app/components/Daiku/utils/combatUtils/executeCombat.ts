@@ -127,26 +127,35 @@ export const executeCombat = (
       // Skip invalid or already defeated enemies
       if (!enemy || !("id" in enemy) || !enemy.id || enemy.defeated) return enemy;
 
-      // Find if this enemy was attacked by any player
-      const attackEntry = Array.from(playerAttacks.entries()).find(
+      // Find ALL players who attacked this enemy
+      const attackEntries = Array.from(playerAttacks.entries()).filter(
         (entry) => entry[1] === enemy.id
       );
 
-      const attackingPlayerId = attackEntry ? attackEntry[0] : undefined;
+      // If this enemy wasn't attacked by any player, return it unchanged
+      if (attackEntries.length === 0) return enemy;
 
-      // If this enemy was attacked, calculate damage
-      if (attackingPlayerId !== undefined) {
-        // Player attacked this enemy
+      // Process each attack and accumulate damage
+      let totalDamage = 0;
+      const attackers = [];
+
+      // Get the terrain at the enemy position
+      const terrainType = terrainMap.get(`${enemy.position.q},${enemy.position.r}`)?.type;
+      if (!terrainType) return enemy; // Safety check
+
+      // Calculate damage for each attacker
+      for (const attackEntry of attackEntries) {
+        const attackingPlayerId = attackEntry[0];
         const attackingPlayer = playerEntities.find((p) => p.id === attackingPlayerId);
 
-        if (!attackingPlayer || !enemy) return enemy;
+        if (!attackingPlayer) continue;
 
-        const terrainType = terrainMap.get(`${enemy.position.q},${enemy.position.r}`)?.type;
+        console.log(
+          `Processing attack from ${attackingPlayer.entityType.type} on ${enemy.entityType.type}`
+        );
 
-        if (!terrainType) return enemy;
-
-        // Calculate damage based on player's combat power and enemy's defense
-        let damage = calculateAttackDamage(
+        // Calculate damage for this attacker
+        const damage = calculateAttackDamage(
           attackingPlayer.entityType,
           attackingPlayer.position,
           enemy.position,
@@ -154,33 +163,44 @@ export const executeCombat = (
           enemy.entityType.combat.defense
         );
 
-        const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-        const newHealth = Math.max(0, currentHealth - damage);
-        const attackerName = attackingPlayer?.entityType.name ?? "Unknown";
-        const targetName = enemy.entityType.name;
-        const eventMessage = generateEventMessage(
-          attackingPlayer,
-          enemy,
-          damage,
-          currentHealth,
-          newHealth
-        );
-        log(eventMessage);
+        if (damage > 0) {
+          totalDamage += damage;
+          attackers.push(attackingPlayer);
 
-        if (newHealth <= 0) {
-          log(`${targetName} has been defeated!`);
+          const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
+          const newHealth = Math.max(0, currentHealth - damage);
+
+          // Log individual attack
+          log(generateEventMessage(attackingPlayer, enemy, damage, currentHealth, newHealth));
         }
-
-        return {
-          ...enemy,
-          entityType: {
-            ...enemy.entityType,
-            currentHealth: newHealth,
-          },
-        };
       }
 
-      return enemy;
+      // Apply the accumulated damage
+      const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
+      const newHealth = Math.max(0, currentHealth - totalDamage);
+
+      // Generate summary message if multiple attackers
+      if (attackers.length > 1) {
+        const attackerNames = attackers.map((a) => a.entityType.name).join(", ");
+        log(
+          `Combined attack on ${enemy.entityType.name} deals ${totalDamage} damage! (${currentHealth} → ${newHealth})`
+        );
+      } else if (attackers.length === 1) {
+        // Already logged individual attack above
+      }
+
+      if (newHealth <= 0) {
+        log(`${enemy.entityType.name} has been defeated!`);
+      }
+
+      return {
+        ...enemy,
+        entityType: {
+          ...enemy.entityType,
+          currentHealth: newHealth,
+        },
+        defeated: newHealth <= 0,
+      };
     });
 
     // Apply damage from enemy attacks
@@ -188,82 +208,82 @@ export const executeCombat = (
       // Skip invalid or already defeated players
       if (!player || !player.id || player.defeated) return player;
 
-      // Find if this player was attacked by any enemy
-      const attackEntry = Array.from(enemyAttacks.entries()).find(
+      // Find ALL enemies who attacked this player
+      const attackEntries = Array.from(enemyAttacks.entries()).filter(
         (entry) => entry[1] === player.id
       );
 
-      const attackingEnemyId = attackEntry ? attackEntry[0] : undefined;
+      // If this player wasn't attacked by any enemy, return it unchanged
+      if (attackEntries.length === 0) return player;
 
-      // If this player was attacked, calculate damage and reduce health
-      if (attackingEnemyId !== undefined) {
-        // Enemy attacked this player
+      // Process each attack and accumulate damage
+      let totalDamage = 0;
+      const attackers = [];
+
+      // Get the terrain at the player position
+      const terrainType =
+        terrainMap.get(`${player.position.q},${player.position.r}`)?.type ?? "grass";
+
+      // Calculate damage for each attacker
+      for (const attackEntry of attackEntries) {
+        const attackingEnemyId = attackEntry[0];
         const attackingEnemy = enemyEntities.find((e) => e.id === attackingEnemyId);
 
-        if (!attackingEnemy) return player;
+        if (!attackingEnemy) continue;
 
-        // Calculate damage based on enemy's combat power and player's defense
-        let damage = calculateAttackDamage(
+        console.log(
+          `Processing attack from enemy ${attackingEnemy.entityType.type} on player ${player.entityType.type}`
+        );
+
+        // Calculate damage for this attacker
+        const damage = calculateAttackDamage(
           attackingEnemy.entityType,
           attackingEnemy.position,
           player.position,
-          player.entityType.abilities.canShootOverWater ? "water" : "grass",
+          terrainType,
           player.entityType.combat.defense
-        ); // Default damage
+        );
 
-        const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
-        const newHealth = Math.max(0, currentHealth - damage);
-        const attackerName = attackingEnemy?.entityType.type ?? "Unknown";
-        const targetName = player.id;
-        log(generateEventMessage(attackingEnemy, player, damage, currentHealth, newHealth));
+        if (damage > 0) {
+          totalDamage += damage;
+          attackers.push(attackingEnemy);
 
-        if (newHealth <= 0) {
-          log(`${targetName} has been defeated!`);
+          // Log individual attack
+          const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
+          const newHealth = Math.max(0, currentHealth - damage);
+          log(generateEventMessage(attackingEnemy, player, damage, currentHealth, newHealth));
         }
-
-        return {
-          ...player,
-          entityType: {
-            ...player.entityType,
-            currentHealth: newHealth,
-          },
-          defeated: newHealth <= 0,
-        };
       }
 
-      return player;
+      // Apply the accumulated damage
+      const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
+      const newHealth = Math.max(0, currentHealth - totalDamage);
+
+      // Generate summary message if multiple attackers
+      if (attackers.length > 1) {
+        const attackerNames = attackers.map((a) => a.entityType.name).join(", ");
+        log(
+          `Combined enemy attack on ${player.entityType.name} deals ${totalDamage} damage! (${currentHealth} → ${newHealth})`
+        );
+      } else if (attackers.length === 1) {
+        // Already logged individual attack above
+      }
+
+      if (newHealth <= 0) {
+        log(`${player.entityType.name} has been defeated!`);
+      }
+
+      return {
+        ...player,
+        entityType: {
+          ...player.entityType,
+          currentHealth: newHealth,
+        },
+        defeated: newHealth <= 0,
+      };
     });
 
-    // Filter out defeated entities (those with health at 0)
-    // const survivingEnemyEntities = updatedEnemyEntities.filter((enemy): enemy is EnemyEntity => {
-    //   if (!enemy) return false;
-    //   const health = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-    //   return health > 0;
-    // });
-
-    // const survivingPlayerEntities = updatedPlayerEntities.filter(
-    //   (player): player is PlayerEntity => {
-    //     if (!player) return false;
-    //     const health = player.entityType.currentHealth ?? player.entityType.maxHealth;
-    //     return health > 0;
-    //   }
-    // );
-
-    // Filter out defeated entities
-    const survivingEnemyEntities = updatedEnemyEntities.filter((enemy) => !enemy.defeated);
-    const survivingPlayerEntities = updatedPlayerEntities.filter((player) => !player.defeated);
-
-    // Calculate combat results
-    const initialEnemyCount = enemyEntities.length;
-    const initialPlayerCount = playerEntities.length;
-    const defeatedEnemies = initialEnemyCount - updatedEnemyEntities.length;
-    const defeatedPlayers = initialPlayerCount - updatedPlayerEntities.length;
-
-    log(
-      `Round ${roundNumber} ended with ${
-        initialEnemyCount - updatedEnemyEntities.length
-      } enemies and ${initialPlayerCount - updatedPlayerEntities.length} players defeated.`
-    );
+    log(`~ Round ${roundNumber} ended ~`);
 
     // Call callback with final results
     combatResultCallback(updatedEnemyEntities, updatedPlayerEntities);

@@ -119,7 +119,7 @@ const MainPage = () => {
   const { isCombatPhase, setIsCombatPhase } = useCombatPhase();
 
   // Use combat log hook
-  const { logEntries, addLogEntry, clearLog } = useCombatLog(10);
+  const { logEntries, addLogEntry } = useCombatLog();
 
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
@@ -262,14 +262,12 @@ const MainPage = () => {
 
           // End combat phase
           setIsCombatPhase(false);
+          setCurrentTurn(currentTurn + 1);
         },
         addLogEntry,
         currentTurn
       );
     }, 1500); // 1.5 second delay for visual feedback
-
-    // Clear combat log when a new combat phase starts
-    clearLog();
   };
 
   // Helper function to calculate distance between hex coordinates

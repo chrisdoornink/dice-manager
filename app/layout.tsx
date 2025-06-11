@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import GoogleAnalytics from "./components/GoogleAnalytics";
-import { ThemeProvider } from "./contexts/ThemeContext";
-// import ThemeToggle from "./components/ThemeToggle";
-// import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Dice Manager",
-  description: "A simple and effective dice rolling manager for tabletop games",
+  title: "Daiku",
+  description: "Your daily combat simulator",
 };
 
 export default function RootLayout({
@@ -21,10 +18,7 @@ export default function RootLayout({
     <html lang="en" style={{ backgroundColor: "var(--background-color)" }}>
       <body className={inter.className}>
         <GoogleAnalytics />
-        <ThemeProvider>
-          {children}
-          {/* <ThemeToggle /> */}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );
