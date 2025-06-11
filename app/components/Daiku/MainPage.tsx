@@ -21,11 +21,14 @@ import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
 import SpriteDebugModal from "./components/SpriteDebugModal";
 import HealthDebugModal from "./components/HealthDebugModal";
 import Button from "@mui/material/Button";
+import CombatLogOverlay from "./components/CombatLogOverlay";
+import useCombatLog from "./hooks/useCombatLog";
 
 // Import extracted component files
 import HeaderSection from "./components/HeaderSection";
 import FooterSection from "./components/FooterSection";
 import HexagonGrid from "./components/HexagonGrid";
+// Using FooterSection instead of ControlPanel
 
 // Import our custom hooks
 import useWindowDimensions from "./hooks/useWindowDimensions";
@@ -114,6 +117,9 @@ const MainPage = () => {
   // Use enemy turn hook
   const { isEnemyTurn, setIsEnemyTurn, enemyPendingMoves, setEnemyPendingMoves } = useEnemyTurn();
   const { isCombatPhase, setIsCombatPhase } = useCombatPhase();
+
+  // Use combat log hook
+  const { logEntries, addLogEntry, clearLog } = useCombatLog(10);
 
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
@@ -246,24 +252,23 @@ const MainPage = () => {
 
       // Execute combat using imported utility function
       executeCombat(
-        updatedEnemyEntities, 
-        updatedPlayerEntities, 
-        terrainMap, 
-        (survivingEnemyEntities: EnemyEntity[], survivingPlayerEntities: PlayerEntity[], defeatedEnemies: number, defeatedPlayers: number) => {
+        updatedEnemyEntities,
+        updatedPlayerEntities,
+        terrainMap,
+        (enemyEntities: EnemyEntity[], playerEntities: PlayerEntity[]) => {
           // Update entities with new health values
-          setEnemyEntities(survivingEnemyEntities);
-          setPlayerEntities(survivingPlayerEntities);
-
-          // Log combat results
-          if (defeatedEnemies > 0 || defeatedPlayers > 0) {
-            console.log(`Combat results: ${defeatedEnemies} enemies defeated, ${defeatedPlayers} players defeated`);
-          }
+          setEnemyEntities(enemyEntities);
+          setPlayerEntities(playerEntities);
 
           // End combat phase
           setIsCombatPhase(false);
-        }
+        },
+        addLogEntry
       );
     }, 1500); // 1.5 second delay for visual feedback
+
+    // Clear combat log when a new combat phase starts
+    clearLog();
   };
 
   // Helper function to calculate distance between hex coordinates
@@ -462,6 +467,9 @@ const MainPage = () => {
           }
         }}
       />
+
+      {/* Combat Log Overlay */}
+      <CombatLogOverlay logEntries={logEntries} />
 
       {/* Debug Buttons and Modals */}
       <Button

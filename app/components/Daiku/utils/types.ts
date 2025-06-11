@@ -69,6 +69,7 @@ export interface PlayerEntity {
   position: GridPosition;
   entityType: EntityDefinition;
   isEnemy?: false;
+  defeated?: boolean;
 }
 
 // Enemy entity with position
@@ -77,6 +78,7 @@ export interface EnemyEntity {
   position: GridPosition;
   entityType: EntityDefinition;
   isEnemy: true;
+  defeated?: boolean;
 }
 
 // Combined entity type
