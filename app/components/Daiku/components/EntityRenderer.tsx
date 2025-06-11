@@ -26,26 +26,80 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
   if (entity) {
     return (
       <g key={`entity-${entity.id}`}>
-        <foreignObject x="5" y="-5" width="90" height="100">
-          <Entity
-            entity={entity}
-            isSelected={!!(selectedEntity && selectedEntity.id === entity.id)}
-            isPendingMove={pendingMoves.has(entity.id)}
-            onClick={(entity: GameEntity) => handleEntityClick(entity)}
+        <svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+          <defs>
+            <pattern
+              id={`entity-pattern-${entity.id}`}
+              patternUnits="userSpaceOnUse"
+              width="64"
+              height="64"
+            >
+              <image
+                href={entity.entityType.spriteSheetSprite?.spritesheet}
+                x={entity.entityType.spriteSheetSprite ? -entity.entityType.spriteSheetSprite.x : 0}
+                y={entity.entityType.spriteSheetSprite ? -entity.entityType.spriteSheetSprite.y : 0}
+                width="256"
+                height="256"
+                preserveAspectRatio="xMinYMin"
+              />
+            </pattern>
+          </defs>
+          <rect
+            x="20" 
+            y="20"
+            width="60"
+            height="60"
+            fill={`url(#entity-pattern-${entity.id})`}
+            stroke={selectedEntity && selectedEntity.id === entity.id ? "#ffffff" : "none"}
+            strokeWidth="2"
+            opacity={pendingMoves.has(entity.id) ? 0.7 : 1}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEntityClick(entity);
+            }}
+            style={{ cursor: "pointer" }}
           />
-        </foreignObject>
+        </svg>
       </g>
     );
   }
 
   // Show ghost preview of pending moves
   const pendingEntity = getEntityWithPendingMoveTo(position);
-  if (pendingEntity) {
+  if (pendingEntity && pendingEntity.entityType.spriteSheetSprite) {
     return (
       <g key={`ghost-${pendingEntity.id}`}>
-        <foreignObject x="5" y="-5" width="90" height="100">
-          <Entity entity={pendingEntity} isGhost={true} isPendingMove={true} />
-        </foreignObject>
+        <svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+          <defs>
+            <pattern
+              id={`ghost-entity-pattern-${pendingEntity.id}`}
+              patternUnits="userSpaceOnUse"
+              width="64"
+              height="64"
+            >
+              <image
+                href={pendingEntity.entityType.spriteSheetSprite.spritesheet}
+                x={-pendingEntity.entityType.spriteSheetSprite.x}
+                y={-pendingEntity.entityType.spriteSheetSprite.y}
+                width="256"
+                height="256"
+                preserveAspectRatio="xMinYMin"
+              />
+            </pattern>
+          </defs>
+          <rect
+            x="20" 
+            y="20"
+            width="60"
+            height="60"
+            fill={`url(#ghost-entity-pattern-${pendingEntity.id})`}
+            stroke="#FFA500"
+            strokeWidth="2"
+            strokeDasharray="4"
+            opacity={0.6}
+            style={{ pointerEvents: "none" }}
+          />
+        </svg>
       </g>
     );
   }
