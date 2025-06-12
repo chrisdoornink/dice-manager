@@ -270,11 +270,13 @@ const useEnemyAI = () => {
   ): Map<string, GridPosition> => {
     const enemyMoves = new Map<string, GridPosition>();
     
-    // Process enemies in a random order to avoid bias in collision resolution
-    const shuffledEnemies = [...enemies].sort(() => Math.random() - 0.5);
-    
-    // Calculate moves for each enemy
-    for (const enemy of shuffledEnemies) {
+    // Process each enemy (skip defeated enemies)
+    for (const enemy of enemies) {
+      // Skip processing for defeated enemies
+      if (enemy.defeated) {
+        continue;
+      }
+
       let targetPosition: GridPosition | null = null;
       
       // Determine behavior based on enemy type (could be stored in entity)
