@@ -21,33 +21,38 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
   // Get entity at this position (if any)
   const entity = getEntityAtPosition(position);
 
-  const getSVGSpriteLocationAdjustment = () => {
-    if (entity?.entityType.type === "archer") {
+  const getSVGSpriteLocationAdjustment = (currentEntity: GameEntity) => {
+    if (currentEntity?.entityType.type === "archer") {
       return { x: 20, y: 0 };
     }
 
-    if (entity?.entityType.type === "spuddle") {
+    if (currentEntity?.entityType.type === "spuddle") {
       return { x: 15, y: -5 };
     }
 
-    if (entity?.entityType.type === "skritcher") {
+    if (currentEntity?.entityType.type === "skritcher") {
       return { x: 15, y: 5 };
     }
 
-    if (entity?.entityType.type === "whumble") {
+    if (currentEntity?.entityType.type === "whumble") {
       return { x: 10, y: 0 };
     }
 
     return { x: 0, y: 0 };
   };
 
+  if (selectedEntity === entity) {
+    console.log("selectedEntity", selectedEntity);
+    console.log("entity", entity);
+  }
+
   // Always show entity at its original position, even if it has a pending move
   if (entity) {
     return (
       <g key={`entity-${entity.id}`}>
         <svg
-          x={getSVGSpriteLocationAdjustment().x}
-          y={getSVGSpriteLocationAdjustment().y}
+          x={getSVGSpriteLocationAdjustment(entity).x}
+          y={getSVGSpriteLocationAdjustment(entity).y}
           width="100"
           height="100"
           viewBox="0 0 100 100"
@@ -94,8 +99,8 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
     return (
       <g key={`ghost-${pendingEntity.id}`}>
         <svg
-          x={getSVGSpriteLocationAdjustment().x}
-          y={getSVGSpriteLocationAdjustment().y}
+          x={getSVGSpriteLocationAdjustment(pendingEntity).x}
+          y={getSVGSpriteLocationAdjustment(pendingEntity).y}
           width="100"
           height="100"
           viewBox="0 0 100 100"
