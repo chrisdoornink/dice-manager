@@ -1,5 +1,16 @@
-import React from 'react';
-import { HexagonData } from '../utils/types';
+import React from "react";
+import { HexagonData } from "../utils/types";
+
+// Helper function to shift hexagon points to create a shadow
+const createShadowPoints = (hexagonPoints: string, offsetX: number, offsetY: number): string => {
+  return hexagonPoints
+    .split(" ")
+    .map((point) => {
+      const [x, y] = point.split(",").map(Number);
+      return `${x + offsetX},${y + offsetY}`;
+    })
+    .join(" ");
+};
 
 interface HexagonTileProps {
   position: HexagonData;
@@ -40,23 +51,22 @@ const HexagonTile: React.FC<HexagonTileProps> = ({
               points={hexagonPoints}
               fill={`url(#terrain-pattern-${position.q}-${position.r})`}
               fillOpacity={
-                position.terrain.patternOpacity !== undefined
-                  ? position.terrain.patternOpacity
-                  : 1
+                position.terrain.patternOpacity !== undefined ? position.terrain.patternOpacity : 1
               }
               clipPath={`url(#hexClip-${position.q}-${position.r})`}
             />
           </>
         )}
 
+      {/* 3D effect - Shadow/side part */}
+      <polygon points={createShadowPoints(hexagonPoints, 0, 5)} fill="#000000" opacity="0.9" />
+
       {/* Define the hexagon shape with a stroke */}
       <polygon
         points={hexagonPoints}
         fill={getHexagonFillColor(position)}
         fillOpacity={
-          position.terrain.type === "water" || position.terrain.type === "grass"
-            ? "0.6"
-            : "1"
+          position.terrain.type === "water" || position.terrain.type === "grass" ? "0.6" : "1"
         }
         strokeWidth="3"
         stroke="#374d22"
