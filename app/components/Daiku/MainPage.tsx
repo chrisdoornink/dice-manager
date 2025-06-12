@@ -508,6 +508,9 @@ const MainPage = () => {
         message={gameOverMessage}
         onClose={() => setIsGameOverModalOpen(false)}
         onReset={handleReset}
+        playerEntities={playerEntities}
+        enemyEntities={enemyEntities}
+        currentTurn={currentTurn}
       />
     </Container>
   );

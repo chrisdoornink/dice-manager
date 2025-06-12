@@ -94,6 +94,10 @@ export interface PlayerEntity {
   entityType: EntityDefinition;
   isEnemy?: boolean;
   defeated?: boolean;
+  // Stats for game summary
+  kills: number;
+  killedBy?: string; // ID of the entity that killed this one
+  turnDefeated?: number; // Turn when this entity was defeated
 }
 
 // Enemy entity with position
