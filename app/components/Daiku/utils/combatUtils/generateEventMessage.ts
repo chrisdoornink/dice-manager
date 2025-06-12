@@ -46,7 +46,7 @@ export const generateEventMessage = (
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
-    if (attackerName === "Spettle") {
+    if (attackerName === "Spuddle") {
       action = damage > 0 ? "squirts at" : "misses";
       adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);

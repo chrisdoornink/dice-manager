@@ -1,5 +1,5 @@
-import React from 'react';
-import { EnemyEntity } from '../utils/types';
+import React from "react";
+import { EnemyEntity } from "../utils/types";
 
 // Define Point interface since we don't have direct access to the calculateHexagonCenter module
 interface Point {
@@ -16,7 +16,7 @@ interface EnemyEntitiesProps {
 export const EnemyEntities: React.FC<EnemyEntitiesProps> = ({
   enemies,
   hexSize,
-  calculateHexagonCenter
+  calculateHexagonCenter,
 }) => {
   return (
     <>
@@ -45,16 +45,16 @@ export const EnemyEntities: React.FC<EnemyEntitiesProps> = ({
               }px)`,
               zIndex: 10,
               transition: "transform 0.3s ease-in-out",
-              border: '2px solid #ff0000', // Red border for enemy units
-              boxShadow: '0 0 8px rgba(255, 0, 0, 0.5)', // Red glow for enemy units
+              border: "2px solid #ff0000", // Red border for enemy units
+              boxShadow: "0 0 8px rgba(255, 0, 0, 0.5)", // Red glow for enemy units
             }}
             onClick={() => {
               // Just show info about the enemy unit for now
-              console.log('Enemy clicked:', entity);
+              console.log("Enemy clicked:", entity);
             }}
           >
             {entity.entityType.type === "clobbin" && "👹"}
-            {entity.entityType.type === "spettle" && "👺"}
+            {entity.entityType.type === "spuddle" && "👺"}
             {entity.entityType.type === "skritcher" && "👻"}
             {entity.entityType.type === "whumble" && "👾"}
           </div>

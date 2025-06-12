@@ -26,6 +26,19 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
     if (entity?.entityType.type === "archer") {
       return { x: 20, y: 0 };
     }
+
+    if (entity?.entityType.type === "spuddle") {
+      return { x: 15, y: -5 };
+    }
+
+    if (entity?.entityType.type === "skritcher") {
+      return { x: 15, y: 5 };
+    }
+
+    if (entity?.entityType.type === "whumble") {
+      return { x: 10, y: 0 };
+    }
+
     return { x: 0, y: 0 };
   };
 

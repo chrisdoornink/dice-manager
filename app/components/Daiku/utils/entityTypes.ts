@@ -122,9 +122,9 @@ export const enemyUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 0, // First sprite in bottom half
-      y: 114, // Second row
-      width: 64,
-      height: 64,
+      y: 120, // Second row
+      width: 94,
+      height: 108,
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
@@ -148,10 +148,10 @@ export const enemyUnitTypes = {
     color: "#FFC107", // Yellow
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 54, // Second sprite in second row
-      y: 114, // Second row
+      x: 90, // Second sprite in second row
+      y: 120, // Second row
       width: 64,
-      height: 64,
+      height: 108,
       singleImage: false,
     },
     movement: 0, // Does not move, only in water tiles
@@ -173,10 +173,10 @@ export const enemyUnitTypes = {
     color: "#E91E63", // Magenta
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 110, // Third sprite in second row
-      y: 114, // Second row
+      x: 155, // Third sprite in second row
+      y: 134, // Second row
       width: 64,
-      height: 64,
+      height: 128,
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
@@ -199,10 +199,10 @@ export const enemyUnitTypes = {
     color: "#9C27B0", // Purple
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 164, // Fourth sprite in second row
-      y: 124, // Second row
-      width: 64,
-      height: 64,
+      x: 230, // Fourth sprite in second row
+      y: 130, // Second row
+      width: 94,
+      height: 108,
       singleImage: false,
     },
     movement: 1, // 1 tile per turn
