@@ -114,8 +114,28 @@ export const executeCombat = (
       }
     });
 
-    // Track enemy attack if they're adjacent to a player
-    if (closestPlayer && minDistance <= 1 && "id" in closestPlayer && closestPlayer.id) {
+    // Calculate enemy combat range with terrain bonuses (similar to player logic)
+    const enemyCurrentCombatRange = () => {
+      let attackRange = enemy.entityType.combat.distance;
+      const terrainType = terrainMap.get(`${enemy.position.q},${enemy.position.r}`)?.type;
+      
+      if (terrainType === "forest" && enemy.entityType.abilities.poorRangeInForests) {
+        attackRange -= 1;
+      }
+      if (terrainType === "forest" && enemy.entityType.abilities.greatRangeInForests) {
+        attackRange += 1;
+      }
+      if (terrainType === "mountain" && enemy.entityType.abilities.greatRangeInMountains) {
+        attackRange += 2;
+      }
+      if (terrainType === "grass" && enemy.entityType.abilities.greatRangeInGrass) {
+        attackRange += 1;
+      }
+      return Math.max(1, attackRange); // Ensure minimum range of 1
+    };
+
+    // Track enemy attack if they're within their combat range of a player
+    if (closestPlayer && minDistance <= enemyCurrentCombatRange() && "id" in closestPlayer && closestPlayer.id) {
       enemyAttacks.set(enemy.id, closestPlayer.id);
     }
   });
