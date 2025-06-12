@@ -53,6 +53,7 @@ export interface EntityDefinition {
   minHealth: number;
   maxHealth: number;
   currentHealth?: number; // Optional current health, defaults to maxHealth if not set
+  startingHealth?: number;
   // Special abilities and characteristics
   abilities: {
     greatRangeInMountains?: boolean;
@@ -95,9 +96,11 @@ export interface PlayerEntity {
   isEnemy?: boolean;
   defeated?: boolean;
   // Stats for game summary
-  kills: number;
   killedBy?: string; // ID of the entity that killed this one
   turnDefeated?: number; // Turn when this entity was defeated
+  startingHealth?: number;
+  kills?: number;
+  currentHealth?: number;
 }
 
 // Enemy entity with position

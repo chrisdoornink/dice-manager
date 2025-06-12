@@ -63,9 +63,13 @@ export const useGameInitialization = ({
           const randomHealth =
             Math.floor(Math.random() * (baseType.maxHealth - baseType.minHealth + 1)) +
             baseType.minHealth;
+          const startingHealth = randomHealth;
+          const kills = 0;
           return {
             ...baseType,
-            currentHealth: randomHealth,
+            currentHealth: startingHealth,
+            startingHealth,
+            kills,
           };
         }
 
