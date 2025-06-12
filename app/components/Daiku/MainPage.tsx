@@ -31,6 +31,7 @@ import useGameInitialization from "./hooks/useGameInitialization";
 import useGameVisuals from "./hooks/useGameVisuals";
 import useTileSelection from "./hooks/useTileSelection";
 import useEnemyAI from "./hooks/useEnemyAI";
+import usePerspectiveEffect from "./hooks/usePerspectiveEffect";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -48,21 +49,8 @@ export const useCombatPhase = () => {
 };
 
 const MainPage = () => {
-  // Perspective slider state for 3D board effect (using logarithmic scale internally)
-  const [sliderValue, setSliderValue] = useState<number>(50); // 0-100 for slider UI
-  
-  // Convert slider value (0-100) to perspective value (100-800) using logarithmic scale
-  // This gives finer control at the lower end (around 100) where visual changes are more dramatic
-  const perspectiveValue = React.useMemo(() => {
-    // Map 0-100 to 100-800 using logarithmic scale
-    const minPerspective = 100;
-    const maxPerspective = 800;
-    const logMin = Math.log(minPerspective);
-    const logMax = Math.log(maxPerspective);
-    const scale = (logMax - logMin) / 100;
-    
-    return Math.round(Math.exp(logMin + scale * sliderValue));
-  }, [sliderValue]);
+  // Use perspective effect hook for 3D board effect
+  const { sliderValue, perspectiveValue, handlePerspectiveChange } = usePerspectiveEffect();
   
   // Get window dimensions using our custom hook
   const windowDimensions = useWindowDimensions();
@@ -71,11 +59,6 @@ const MainPage = () => {
   const calculatedWindowDimensions = {
     width: windowDimensions.width * 0.8,
     height: windowDimensions.height * 0.8,
-  };
-  
-  // Handle perspective slider change
-  const handlePerspectiveChange = (event: Event, newValue: number | number[]) => {
-    setSliderValue(newValue as number);
   };
 
   // Get hexagon size using the hexagon size hook
