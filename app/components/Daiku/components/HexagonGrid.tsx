@@ -24,6 +24,7 @@ interface HexagonGridProps {
   getHexagonFillColor: (position: HexagonData) => string;
   pendingMoves?: Map<string, GridPosition>;
   getEntityWithPendingMoveTo?: (position: GridPosition) => PlayerEntity | undefined;
+  perspectiveValue: number;
 }
 
 const HexagonGrid: React.FC<HexagonGridProps> = ({
@@ -44,6 +45,7 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
   getHexagonFillColor,
   pendingMoves = new Map(),
   getEntityWithPendingMoveTo = () => undefined,
+  perspectiveValue,
 }) => {
   return (
     <Box
@@ -57,6 +59,10 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
         alignItems: "center",
         flexGrow: 1,
         boxSizing: "border-box",
+        // Create tabletop perspective illusion with subtle transforms
+        transform: `perspective(${perspectiveValue}px) rotateX(5deg)`,
+        transformOrigin: "center center",
+        transformStyle: "preserve-3d",
       }}
     >
       {/* Render all visible hexagons */}

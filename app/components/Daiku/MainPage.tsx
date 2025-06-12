@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Container, Box, Fade } from "@mui/material";
+import { Box, Container, Typography, Slider, Fade } from "@mui/material";
 import { GridPosition, PlayerEntity, EnemyEntity, GameEntity, HexagonData } from "./utils/types";
 import { executeCombat } from "./utils/combatUtils/executeCombat";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
@@ -48,6 +48,22 @@ export const useCombatPhase = () => {
 };
 
 const MainPage = () => {
+  // Perspective slider state for 3D board effect (using logarithmic scale internally)
+  const [sliderValue, setSliderValue] = useState<number>(50); // 0-100 for slider UI
+  
+  // Convert slider value (0-100) to perspective value (100-800) using logarithmic scale
+  // This gives finer control at the lower end (around 100) where visual changes are more dramatic
+  const perspectiveValue = React.useMemo(() => {
+    // Map 0-100 to 100-800 using logarithmic scale
+    const minPerspective = 100;
+    const maxPerspective = 800;
+    const logMin = Math.log(minPerspective);
+    const logMax = Math.log(maxPerspective);
+    const scale = (logMax - logMin) / 100;
+    
+    return Math.round(Math.exp(logMin + scale * sliderValue));
+  }, [sliderValue]);
+  
   // Get window dimensions using our custom hook
   const windowDimensions = useWindowDimensions();
 
@@ -55,6 +71,11 @@ const MainPage = () => {
   const calculatedWindowDimensions = {
     width: windowDimensions.width * 0.8,
     height: windowDimensions.height * 0.8,
+  };
+  
+  // Handle perspective slider change
+  const handlePerspectiveChange = (event: Event, newValue: number | number[]) => {
+    setSliderValue(newValue as number);
   };
 
   // Get hexagon size using the hexagon size hook
@@ -320,7 +341,7 @@ const MainPage = () => {
         alignItems: "center",
         padding: "10px",
         overflow: "hidden",
-        backgroundColor: "#5C4E45",
+        backgroundColor: "#3C4325",
       }}
     >
       {/* Header Section */}
@@ -341,6 +362,47 @@ const MainPage = () => {
           position: "relative",
         }}
       >
+        {/* Perspective slider */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            height: "300px",
+            width: "30px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            borderRadius: "15px",
+            padding: "5px 0",
+          }}
+        >
+          <Slider
+            orientation="vertical"
+            value={sliderValue}
+            onChange={handlePerspectiveChange}
+            min={0}
+            max={100}
+            sx={{
+              height: "280px",
+              width: "8px",
+              '& .MuiSlider-thumb': {
+                width: 16,
+                height: 16,
+                backgroundColor: "#fff",
+              },
+              '& .MuiSlider-track': {
+                backgroundColor: "#fff",
+              },
+              '& .MuiSlider-rail': {
+                backgroundColor: "rgba(255, 255, 255, 0.3)",
+              },
+            }}
+          />
+        </Box>
         <HexagonGrid
           visibleHexagons={visibleHexagons}
           hexSize={hexSize}
@@ -355,6 +417,7 @@ const MainPage = () => {
           setHighlightedNeighbors={setHighlightedNeighbors}
           handleTileSelection={handleTileSelection}
           getEntityAtPosition={getEntityAtPosition}
+          perspectiveValue={perspectiveValue}
           pendingMoves={pendingMoves}
           getEntityWithPendingMoveTo={getEntityWithPendingMoveTo}
           handleEntityClick={(entity) => {

@@ -57,6 +57,14 @@ export interface EntityDefinition {
   abilities: {
     greatRangeInMountains?: boolean;
     greatRangeInForests?: boolean;
+    greatDefenseInForests?: boolean;
+    greatDefenseInMountains?: boolean;
+    greatDefenseInGrass?: boolean;
+    greatDefenseInWater?: boolean;
+    poorDefenseInForests?: boolean;
+    poorDefenseInMountains?: boolean;
+    poorDefenseInGrass?: boolean;
+    poorDefenseInWater?: boolean;
     poorRangeInForests?: boolean;
     greatRangeInGrass?: boolean;
     canShootOverWater?: boolean;
