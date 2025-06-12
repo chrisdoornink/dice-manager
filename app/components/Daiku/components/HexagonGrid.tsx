@@ -77,6 +77,8 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
             ? customCursors.cavalry
             : selectedEntity?.entityType.type === "infantry"
             ? customCursors.infantry
+            : selectedEntity?.entityType.type === "mage"
+            ? customCursors.mage
             : "crosshair"
           : "pointer";
 
