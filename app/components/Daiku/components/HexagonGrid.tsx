@@ -1,10 +1,10 @@
-import React from 'react';
-import { Box, Fade } from '@mui/material';
-import { HexagonData, GridPosition, PlayerEntity, GameEntity } from '../utils/types';
-import { getNeighboringTiles } from '../utils/getNeigboringTiles';
-import { axialToPixel } from '../utils/hexagonCoordinates';
-import HexagonTile from './HexagonTile';
-import EntityRenderer from './EntityRenderer';
+import React from "react";
+import { Box, Fade } from "@mui/material";
+import { HexagonData, GridPosition, PlayerEntity, GameEntity } from "../utils/types";
+import { getNeighboringTiles } from "../utils/getNeigboringTiles";
+import { axialToPixel } from "../utils/hexagonCoordinates";
+import HexagonTile from "./HexagonTile";
+import EntityRenderer from "./EntityRenderer";
 
 interface HexagonGridProps {
   visibleHexagons: HexagonData[];
@@ -43,7 +43,7 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
   handleEntityClick,
   getHexagonFillColor,
   pendingMoves = new Map(),
-  getEntityWithPendingMoveTo = () => undefined
+  getEntityWithPendingMoveTo = () => undefined,
 }) => {
   return (
     <Box
@@ -63,11 +63,12 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
       {visibleHexagons.map((position, index) => {
         // Convert axial coordinates to pixel coordinates using our utility function
         const { x: xPosition, y: yPositionInverted } = axialToPixel(position, hexSize);
-        
+
         // Determine if this hexagon is in the movement range
-        const isInMovementRange = selectedEntity && 
-          movementRangeHexagons.some(pos => pos.q === position.q && pos.r === position.r);
-        
+        const isInMovementRange =
+          selectedEntity &&
+          movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r);
+
         // Determine cursor style based on entity type and movement range
         const cursorStyle = isInMovementRange
           ? selectedEntity?.entityType.type === "archer"
@@ -78,7 +79,7 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
             ? customCursors.infantry
             : "crosshair"
           : "pointer";
-          
+
         return (
           <Fade key={`${position.q}-${position.r}-${index}`} in={true} timeout={200}>
             <Box
@@ -118,14 +119,14 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
                     <polygon points={hexagonPoints} />
                   </clipPath>
                 </defs>
-                
+
                 {/* Render the hexagon tile with proper styling */}
                 <HexagonTile
                   position={position}
                   hexagonPoints={hexagonPoints}
                   getHexagonFillColor={getHexagonFillColor}
                 />
-                
+
                 {/* Render entities using the EntityRenderer component */}
                 <EntityRenderer
                   position={position}
