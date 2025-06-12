@@ -1,25 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Box, Fade } from "@mui/material";
-import {
-  GridPosition,
-  TerrainDefinition,
-  PlayerEntity,
-  EnemyEntity,
-  GameEntity,
-  HexagonData,
-  TerrainType,
-} from "./utils/types";
-import Entity from "./components/Entity";
+import { GridPosition, PlayerEntity, EnemyEntity, GameEntity, HexagonData } from "./utils/types";
 import { executeCombat } from "./utils/combatUtils/executeCombat";
 import { calculateMovementRange } from "./utils/calculateMovementRange";
-import { getNeighboringTiles } from "./utils/getNeigboringTiles";
 import { generateHexPoints } from "./utils/hexMath";
-import { TERRAIN_TYPES } from "./utils/generateTerrainMap";
-import { playerUnitTypes, enemyUnitTypes } from "./utils/entityTypes";
-import SpriteDebugModal from "./components/SpriteDebugModal";
-import Button from "@mui/material/Button";
 import CombatLogOverlay from "./components/CombatLogOverlay";
 import useCombatLog from "./hooks/useCombatLog";
 
@@ -45,10 +31,6 @@ import useGameInitialization from "./hooks/useGameInitialization";
 import useGameVisuals from "./hooks/useGameVisuals";
 import useTileSelection from "./hooks/useTileSelection";
 import useEnemyAI from "./hooks/useEnemyAI";
-
-// Import utility functions
-import { generateTerrainMap } from "./utils/generateTerrainMap";
-import { saveGameState, loadGameState, clearGameState } from "./utils/gameState";
 
 // Custom cursor styles for each unit type
 const customCursors = {
@@ -103,15 +85,8 @@ const MainPage = () => {
     useHexagonHighlight();
 
   // Use move management hook
-  const {
-    pendingMoves,
-    setPendingMoves,
-    errorMessage,
-    setErrorMessage,
-    errorMessageTimeout,
-    setErrorMessageTimeout,
-    showError,
-  } = useMoveManagement();
+  const { pendingMoves, setPendingMoves, errorMessage, setErrorMessage, errorMessageTimeout } =
+    useMoveManagement();
 
   // Use enemy turn hook
   const { isEnemyTurn, setIsEnemyTurn, enemyPendingMoves, setEnemyPendingMoves } = useEnemyTurn();
@@ -125,14 +100,6 @@ const MainPage = () => {
 
   // Use turn management hook
   const { currentTurn, setCurrentTurn } = useTurnManagement();
-
-  // Use modals hook
-  const {
-    isSpriteDebugModalOpen,
-    setIsSpriteDebugModalOpen,
-    isHealthDebugModalOpen,
-    setIsHealthDebugModalOpen,
-  } = useModals();
 
   // Track if the grid has been initialized and animated once
   const [gridInitialized, setGridInitialized] = useState(false);
@@ -170,12 +137,6 @@ const MainPage = () => {
       saveGame(terrainMap, playerEntities, enemyEntities, currentTurn);
     }
   }, [playerEntities, enemyEntities, currentTurn, terrainMap, saveGame]);
-
-  // TODO: Replace with actual enemy data
-  const enemiesForDebug: EnemyEntity[] = [
-    // Example enemy, replace with actual data from your game state
-    // { id: 'enemy1', type: 'Goblin', icon: 'G', currentHealth: 30, maxHealth: 30, attack: '5-10', q: 1, r: 1, initiative: 10 },
-  ];
 
   // Use game visuals hook
   const { visibleHexagons } = useGameVisuals({
@@ -269,21 +230,9 @@ const MainPage = () => {
     }, 1500); // 1.5 second delay for visual feedback
   };
 
-  // Helper function to calculate distance between hex coordinates
-  const calculateHexDistance = (a: GridPosition, b: GridPosition): number => {
-    return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
-  };
-
   // Helper function to check if an entity is at a specific position
   const isEntityAtPosition = (entityPosition: GridPosition, position: GridPosition): boolean => {
     return entityPosition.q === position.q && entityPosition.r === position.r;
-  };
-
-  // Helper function to check if a pending move is targeting a specific position
-  const isPendingMoveToPosition = (position: GridPosition): boolean => {
-    return Array.from(pendingMoves.values()).some(
-      (pendingPos) => pendingPos.q === position.q && pendingPos.r === position.r
-    );
   };
 
   // Helper function to get entity at a position
@@ -307,11 +256,6 @@ const MainPage = () => {
       }
     }
     return undefined;
-  };
-
-  // returns 140% for smaller screens, 100% for larger screens
-  const getExecuteButtonWidth = (): string => {
-    return window.innerWidth < 600 ? "140%" : "100%";
   };
 
   const getHexagonFillColor = (position: HexagonData): string => {
@@ -357,11 +301,6 @@ const MainPage = () => {
       if (position.terrain.type === "mountain") return "#B8E6B8"; // Lighter green for mountain
       return `${position.terrain.color}80`; // 80% opacity as fallback for other terrain types
     }
-
-    // Check if hexagon is a highlighted neighbor
-    // if (highlightedNeighbors.some((n) => n.q === position.q && n.r === position.r)) {
-    //   return `${position.terrain.color}80`; // Terrain color with 50% opacity for highlighted neighbors
-    // }
 
     // Default - use terrain color
     return position.terrain.color;
@@ -419,8 +358,7 @@ const MainPage = () => {
           handleEntityClick={(entity) => {
             // Check if this is an enemy entity
             if (entity.isEnemy) {
-              // For enemy entities, just show info (no selection/movement)
-              console.log("Enemy entity clicked:", entity);
+              // For enemy entities, dont do anything for now except,
               // Clear any previous selection
               setSelectedEntity(null);
               setMovementRangeHexagons([]);

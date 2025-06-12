@@ -1,9 +1,15 @@
-import { useCallback, useEffect } from 'react';
-import { GridPosition, TerrainDefinition, PlayerEntity, EnemyEntity } from '../utils/types';
-import { generateTerrainMap } from '../utils/generateTerrainMap';
-import { getNeighboringTiles } from '../utils/getNeigboringTiles';
-import { playerUnitTypes, enemyUnitTypes } from '../utils/entityTypes';
-import { saveGameState, loadGameState, clearGameState, terrainMapToArray, arrayToTerrainMap } from '../utils/gameState';
+import { useCallback, useEffect } from "react";
+import { GridPosition, TerrainDefinition, PlayerEntity, EnemyEntity } from "../utils/types";
+import { generateTerrainMap } from "../utils/generateTerrainMap";
+import { getNeighboringTiles } from "../utils/getNeigboringTiles";
+import { playerUnitTypes, enemyUnitTypes } from "../utils/entityTypes";
+import {
+  saveGameState,
+  loadGameState,
+  clearGameState,
+  terrainMapToArray,
+  arrayToTerrainMap,
+} from "../utils/gameState";
 
 interface UseGameInitializationProps {
   allGridPositions: GridPosition[];
@@ -30,7 +36,6 @@ export const useGameInitialization = ({
 }: UseGameInitializationProps) => {
   // Initialize a new game
   const initializeNewGame = useCallback(() => {
-    console.log("initializeNewGame");
     if (allGridPositions.length > 0) {
       const newTerrainMap = generateTerrainMap(allGridPositions);
       setTerrainMap(newTerrainMap);
@@ -208,28 +213,43 @@ export const useGameInitialization = ({
         initializeNewGame();
       }
     }
-  }, [allGridPositions, initializeNewGame, setTerrainMap, setPlayerEntities, setEnemyEntities, setCurrentTurn]);
+  }, [
+    allGridPositions,
+    initializeNewGame,
+    setTerrainMap,
+    setPlayerEntities,
+    setEnemyEntities,
+    setCurrentTurn,
+  ]);
 
   // Save game state whenever critical parts change
-  const saveGame = useCallback((terrainMap: Map<string, TerrainDefinition>, playerEntities: PlayerEntity[], enemyEntities: EnemyEntity[], currentTurn: number) => {
-    // Ensure the game has initialized and terrainMap is not empty
-    if (terrainMap.size > 0 && playerEntities.length > 0) {
-      const currentGameState = loadGameState(); // Load to preserve gameStartedAt if it exists
-      saveGameState({
-        terrainMap: terrainMapToArray(terrainMap),
-        playerEntities: playerEntities,
-        enemyEntities: enemyEntities,
-        currentTurn: currentTurn,
-        gameStartedAt: currentGameState?.gameStartedAt || Date.now(), // Preserve original start time
-        lastSavedAt: Date.now(),
-      });
-    }
-  }, []);
+  const saveGame = useCallback(
+    (
+      terrainMap: Map<string, TerrainDefinition>,
+      playerEntities: PlayerEntity[],
+      enemyEntities: EnemyEntity[],
+      currentTurn: number
+    ) => {
+      // Ensure the game has initialized and terrainMap is not empty
+      if (terrainMap.size > 0 && playerEntities.length > 0) {
+        const currentGameState = loadGameState(); // Load to preserve gameStartedAt if it exists
+        saveGameState({
+          terrainMap: terrainMapToArray(terrainMap),
+          playerEntities: playerEntities,
+          enemyEntities: enemyEntities,
+          currentTurn: currentTurn,
+          gameStartedAt: currentGameState?.gameStartedAt || Date.now(), // Preserve original start time
+          lastSavedAt: Date.now(),
+        });
+      }
+    },
+    []
+  );
 
   return {
     initializeNewGame,
     handleReset,
-    saveGame
+    saveGame,
   };
 };
 

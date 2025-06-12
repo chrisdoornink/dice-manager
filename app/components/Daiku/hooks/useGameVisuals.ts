@@ -1,7 +1,7 @@
-import React from 'react';
-import { GridPosition, HexagonData, TerrainDefinition, PlayerEntity } from '../utils/types';
-import { useHexagonAnimation } from './useHexagonAnimation';
-import { ANIMATION_DELAY, TERRAIN_TYPES } from '../utils/generateTerrainMap';
+import React from "react";
+import { GridPosition, HexagonData, TerrainDefinition, PlayerEntity } from "../utils/types";
+import { useHexagonAnimation } from "./useHexagonAnimation";
+import { ANIMATION_DELAY, TERRAIN_TYPES } from "../utils/generateTerrainMap";
 
 interface UseGameVisualsProps {
   allGridPositions: GridPosition[];
@@ -42,10 +42,16 @@ export const useGameVisuals = ({
     }
 
     return gridInitialized ? staticHexagons : animatedHexagons;
-  }, [animatedHexagons, staticHexagons, allGridPositions.length, gridInitialized, setGridInitialized]);
+  }, [
+    animatedHexagons,
+    staticHexagons,
+    allGridPositions.length,
+    gridInitialized,
+    setGridInitialized,
+  ]);
 
   return {
-    visibleHexagons
+    visibleHexagons,
   };
 };
 

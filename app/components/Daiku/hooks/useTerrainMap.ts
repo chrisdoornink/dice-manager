@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { GridPosition, TerrainDefinition } from '../utils/types';
-import { generateTerrainMap } from '../utils/generateTerrainMap';
+import { useState, useEffect } from "react";
+import { GridPosition, TerrainDefinition } from "../utils/types";
+import { generateTerrainMap } from "../utils/generateTerrainMap";
 
 export const useTerrainMap = (allGridPositions: GridPosition[]) => {
   // Pre-generate a terrain map to ensure connectivity
@@ -15,7 +15,7 @@ export const useTerrainMap = (allGridPositions: GridPosition[]) => {
 
   return {
     terrainMap,
-    setTerrainMap
+    setTerrainMap,
   };
 };
 

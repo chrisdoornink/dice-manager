@@ -58,7 +58,6 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
     if (entity.entityType.currentHealth !== undefined) {
       return entity.entityType.currentHealth;
     }
-    console.log("no current health for ", entity.entityType.type);
     return entity.entityType.maxHealth || 3; // Default to 3 if maxHealth is not defined
   };
 
