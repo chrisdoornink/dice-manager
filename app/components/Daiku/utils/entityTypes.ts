@@ -8,10 +8,10 @@ export const playerUnitTypes = {
     color: "#FF5252", // Red
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 127, // Third sprite in first row (0-indexed)
-      y: 0, // First row
-      width: 54,
-      height: 94,
+      x: 170, // Third sprite in first row (0-indexed)
+      y: 10, // First row
+      width: 60,
+      height: 104,
       singleImage: false,
     },
     movement: 2, // 2 tiles per turn
@@ -35,10 +35,10 @@ export const playerUnitTypes = {
     color: "#448AFF", // Blue
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 57, // Second sprite in first row (0-indexed)
-      y: 0,
-      width: 73,
-      height: 94,
+      x: 77, // Second sprite in first row (0-indexed)
+      y: 10,
+      width: 93,
+      height: 104,
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
@@ -64,9 +64,9 @@ export const playerUnitTypes = {
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
       x: 0,
-      y: 0,
-      width: 58,
-      height: 94,
+      y: 10,
+      width: 78,
+      height: 104,
       singleImage: false,
     },
     movement: 1, // 1 tiles per turn
@@ -90,10 +90,10 @@ export const playerUnitTypes = {
     color: "#448AFF", // Blue
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",
-      x: 174,
-      y: 0,
-      width: 56,
-      height: 94,
+      x: 230,
+      y: 10,
+      width: 78,
+      height: 104,
       singleImage: false,
     },
     movement: 3, // 3 tiles per turn
