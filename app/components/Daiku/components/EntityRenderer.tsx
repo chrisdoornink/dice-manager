@@ -48,6 +48,84 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
 
   // Always show entity at its original position, even if it has a pending move
   if (entity) {
+    if (entity.defeated) {
+      if (!entity.isEnemy) {
+        return (
+          <g key={`entity-${entity.id}`}>
+            <svg x={0} y={0} width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+              <defs>
+                <pattern
+                  id={`entity-pattern-${entity.id}`}
+                  patternUnits="userSpaceOnUse"
+                  width="100"
+                  height="100"
+                >
+                  <image
+                    href={"/images/entities/death.png"}
+                    x={10}
+                    y={20}
+                    width="140"
+                    height="140"
+                    preserveAspectRatio="xMinYMin"
+                  />
+                </pattern>
+              </defs>
+              <rect
+                x="10"
+                y="20"
+                width={"70"}
+                height={"70"}
+                fill={`url(#entity-pattern-${entity.id})`}
+                opacity={pendingMoves.has(entity.id) ? 0.7 : 1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEntityClick(entity);
+                }}
+                style={{ cursor: "pointer" }}
+              />
+            </svg>
+          </g>
+        );
+      } else {
+        return (
+          <g key={`entity-${entity.id}`}>
+            <svg x={10} y={30} width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+              <defs>
+                <pattern
+                  id={`entity-pattern-${entity.id}`}
+                  patternUnits="userSpaceOnUse"
+                  width="100"
+                  height="100"
+                >
+                  <image
+                    href={"/images/entities/death.png"}
+                    x={-10}
+                    y={-75}
+                    width="160"
+                    height="150"
+                    preserveAspectRatio="xMinYMin"
+                  />
+                </pattern>
+              </defs>
+              <rect
+                x="0"
+                y="0"
+                width={"80"}
+                height={"100"}
+                fill={`url(#entity-pattern-${entity.id})`}
+                opacity={pendingMoves.has(entity.id) ? 0.7 : 1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEntityClick(entity);
+                }}
+                style={{ cursor: "pointer" }}
+              />
+            </svg>
+          </g>
+        );
+      }
+    }
+
     return (
       <g key={`entity-${entity.id}`}>
         <svg
