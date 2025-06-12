@@ -13,6 +13,7 @@ import useCombatLog from "./hooks/useCombatLog";
 import HeaderSection from "./components/HeaderSection";
 import FooterSection from "./components/FooterSection";
 import HexagonGrid from "./components/HexagonGrid";
+import GameOverModal from "./components/GameOverModal";
 // Using FooterSection instead of ControlPanel
 
 // Import our custom hooks
@@ -51,7 +52,7 @@ export const useCombatPhase = () => {
 const MainPage = () => {
   // Use perspective effect hook for 3D board effect
   const { sliderValue, perspectiveValue, handlePerspectiveChange } = usePerspectiveEffect();
-  
+
   // Get window dimensions using our custom hook
   const windowDimensions = useWindowDimensions();
 
@@ -111,7 +112,7 @@ const MainPage = () => {
   const [gridInitialized, setGridInitialized] = useState(false);
 
   // Use game initialization hook - must be before the save game effect
-  const { initializeNewGame, handleReset, saveGame } = useGameInitialization({
+  const { initializeNewGame, saveGame } = useGameInitialization({
     allGridPositions,
     setTerrainMap,
     setPlayerEntities,
@@ -136,6 +137,18 @@ const MainPage = () => {
     setIsSelectingDestination,
   });
 
+  // Use modals hook
+  const {
+    isSpriteDebugModalOpen,
+    setIsSpriteDebugModalOpen,
+    isHealthDebugModalOpen,
+    setIsHealthDebugModalOpen,
+    isGameOverModalOpen,
+    setIsGameOverModalOpen,
+    gameOverMessage,
+    setGameOverMessage,
+  } = useModals();
+
   // Save game state whenever critical parts change
   useEffect(() => {
     // Ensure the game has initialized and terrainMap is not empty
@@ -143,6 +156,26 @@ const MainPage = () => {
       saveGame(terrainMap, playerEntities, enemyEntities, currentTurn);
     }
   }, [playerEntities, enemyEntities, currentTurn, terrainMap, saveGame]);
+
+  // Check for game over state
+  useEffect(() => {
+    // Check if all player entities are defeated
+    const allPlayersDefeated =
+      playerEntities.length > 0 && playerEntities.every((player) => player.defeated);
+
+    // Check if all enemy entities are defeated
+    const allEnemiesDefeated =
+      enemyEntities.length > 0 && enemyEntities.every((enemy) => enemy.defeated);
+
+    // Show game over modal if either condition is met
+    if (allPlayersDefeated) {
+      setGameOverMessage("All your units have been defeated! The enemy is victorious.");
+      setIsGameOverModalOpen(true);
+    } else if (allEnemiesDefeated) {
+      setGameOverMessage("You have defeated all enemy units! Victory is yours!");
+      setIsGameOverModalOpen(true);
+    }
+  }, [playerEntities, enemyEntities, setGameOverMessage, setIsGameOverModalOpen]);
 
   // Use game visuals hook
   const { visibleHexagons } = useGameVisuals({
@@ -312,6 +345,14 @@ const MainPage = () => {
     return position.terrain.color;
   };
 
+  // Extended reset game state to also close game over modal
+  const handleReset = () => {
+    // Reset game state using the initialization logic
+    initializeNewGame();
+    // Also close the game over modal
+    setIsGameOverModalOpen(false);
+  };
+
   return (
     <Container
       maxWidth={false}
@@ -372,15 +413,15 @@ const MainPage = () => {
             sx={{
               height: "280px",
               width: "8px",
-              '& .MuiSlider-thumb': {
+              "& .MuiSlider-thumb": {
                 width: 16,
                 height: 16,
                 backgroundColor: "#fff",
               },
-              '& .MuiSlider-track': {
+              "& .MuiSlider-track": {
                 backgroundColor: "#fff",
               },
-              '& .MuiSlider-rail': {
+              "& .MuiSlider-rail": {
                 backgroundColor: "rgba(255, 255, 255, 0.3)",
               },
             }}
@@ -460,6 +501,14 @@ const MainPage = () => {
 
       {/* Combat Log Overlay */}
       <CombatLogOverlay logEntries={logEntries} />
+      
+      {/* Game Over Modal */}
+      <GameOverModal
+        isOpen={isGameOverModalOpen}
+        message={gameOverMessage}
+        onClose={() => setIsGameOverModalOpen(false)}
+        onReset={handleReset}
+      />
     </Container>
   );
 };
