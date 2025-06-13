@@ -209,17 +209,49 @@ export const executeCombat = (
         // Already logged individual attack above
       }
 
-      if (newHealth <= 0) {
+      const wasDefeated = newHealth <= 0;
+      
+      if (wasDefeated) {
         log(`${enemy.entityType.name} has been defeated!`);
+        
+        // If enemy was defeated, record the last attacker as the killer
+        if (attackers.length > 0) {
+          // Get the last attacker (the one who dealt the final blow)
+          const killer = attackers[attackers.length - 1];
+          
+          // Update the killer's kill count
+          playerEntities = playerEntities.map(p => {
+            if (p.id === killer.id) {
+              return {
+                ...p,
+                kills: (p.kills || 0) + 1
+              };
+            }
+            return p;
+          });
+          
+          // Return the enemy with killer info
+          return {
+            ...enemy,
+            entityType: {
+              ...enemy.entityType,
+              currentHealth: newHealth,
+            },
+            defeated: true,
+            killedBy: killer.id,
+            turnDefeated: roundNumber || 1
+          };
+        }
       }
 
+      // If not defeated or no attacker, just return with updated health
       return {
         ...enemy,
         entityType: {
           ...enemy.entityType,
           currentHealth: newHealth,
         },
-        defeated: newHealth <= 0,
+        defeated: wasDefeated
       };
     });
 
@@ -289,23 +321,56 @@ export const executeCombat = (
         // Already logged individual attack above
       }
 
-      if (newHealth <= 0) {
+      const wasDefeated = newHealth <= 0;
+      
+      if (wasDefeated) {
         log(`${player.entityType.name} has been defeated!`);
+        
+        // If player was defeated, record the last attacker as the killer
+        if (attackers.length > 0) {
+          // Get the last attacker (the one who dealt the final blow)
+          const killer = attackers[attackers.length - 1];
+          
+          // Update the killer's kill count
+          enemyEntities = enemyEntities.map(e => {
+            if (e.id === killer.id) {
+              return {
+                ...e,
+                kills: (e.kills || 0) + 1
+              };
+            }
+            return e;
+          });
+          
+          // Return the player with killer info
+          return {
+            ...player,
+            entityType: {
+              ...player.entityType,
+              currentHealth: newHealth,
+            },
+            defeated: true,
+            killedBy: killer.id,
+            turnDefeated: roundNumber || 1
+          };
+        }
       }
 
+      // If not defeated or no attacker, just return with updated health
       return {
         ...player,
         entityType: {
           ...player.entityType,
           currentHealth: newHealth,
         },
-        defeated: newHealth <= 0,
+        defeated: wasDefeated
       };
     });
 
     log(`~ Round ${roundNumber} ended ~`);
 
     // Call callback with final results
-    combatResultCallback(updatedEnemyEntities, updatedPlayerEntities);
+    // Use the latest updated entities after kill tracking logic has been applied
+  combatResultCallback(updatedEnemyEntities, updatedPlayerEntities);
   }, 1500); // 1.5 second delay for visual feedback
 };

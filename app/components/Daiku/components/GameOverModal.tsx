@@ -56,7 +56,19 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         </Typography>
 
         <Divider sx={{ width: "100%", my: 2 }} />
-
+        
+        {/* Game Summary */}
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Game Summary
+          </Typography>
+          <Typography variant="body1">
+            Total turns: {currentTurn}
+          </Typography>
+        </Box>
+        
+        <Divider sx={{ width: "100%", my: 2 }} />
+        
         {/* Player Stats */}
         <Box sx={{ width: "100%", mb: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -79,13 +91,28 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     Health: {health}/{startingHealth} ({healthPercent}%)
                   </Typography>
                   <Typography variant="body2">
-                    Status: {isDefeated ? "💀 Defeated" : "✅ Active"}
+                    Status: {isDefeated ? '💀 Defeated' : '✅ Active'}
                   </Typography>
-                  {player.kills && player.kills > 0 && (
-                    <Typography variant="body2">Kills: {player.kills}</Typography>
-                  )}
-                  {isDefeated && player.turnDefeated && (
-                    <Typography variant="body2">Defeated on turn: {player.turnDefeated}</Typography>
+                  <Typography variant="body2">
+                    Kills: {player.kills || 0}
+                  </Typography>
+                  {isDefeated && (
+                    <>
+                      {player.turnDefeated && (
+                        <Typography variant="body2">
+                          Defeated on turn: {player.turnDefeated}
+                        </Typography>
+                      )}
+                      {player.killedBy && (
+                        <Typography variant="body2">
+                          Killed by: {player.killedBy.startsWith('clobbin') ? 'Clobbin' :
+                                    player.killedBy.startsWith('spuddle') ? 'Spuddle' :
+                                    player.killedBy.startsWith('skritcher') ? 'Skritcher' :
+                                    player.killedBy.startsWith('whumble') ? 'Whumble' :
+                                    player.killedBy}
+                        </Typography>
+                      )}
+                    </>
                   )}
                 </Box>
               </Box>
