@@ -42,33 +42,28 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
     return { x: 0, y: 0 };
   };
 
-  if (selectedEntity === entity) {
-    console.log("selectedEntity", selectedEntity);
-    console.log("entity", entity);
-  }
-
   // Animation states for death effect
   const [isDeathAnimating, setIsDeathAnimating] = useState(false);
   const [showGravestone, setShowGravestone] = useState(false);
   const entityRef = useRef<GameEntity | null>(null);
-  
+
   // Check if the entity just died (transition from alive to defeated)
   useEffect(() => {
     if (entity && entity.defeated && entityRef.current && !entityRef.current.defeated) {
       // Entity just died, start death animation
       setIsDeathAnimating(true);
-      
+
       // After animation completes, show gravestone
       setTimeout(() => {
         setIsDeathAnimating(false);
         setShowGravestone(true);
       }, 1500); // Animation duration
     }
-    
+
     // Store current entity state for comparison in next render
     entityRef.current = entity || null;
   }, [entity]);
-  
+
   // Always show entity at its original position, even if it has a pending move
   if (entity) {
     // Death animation rendering
@@ -78,8 +73,8 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
       const spriteY = entity.entityType.spriteSheetSprite?.y || 0;
       const spriteWidth = entity.entityType.spriteSheetSprite?.width || 100;
       const spriteHeight = entity.entityType.spriteSheetSprite?.height || 100;
-      const spriteSheet = entity.entityType.spriteSheetSprite?.spritesheet || '';
-      
+      const spriteSheet = entity.entityType.spriteSheetSprite?.spritesheet || "";
+
       return (
         <g key={`entity-death-${entity.id}`}>
           {/* Original entity fading out */}
@@ -91,7 +86,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
             viewBox="0 0 100 100"
             overflow="visible"
             opacity="0.8"
-            style={{ animation: 'fadeOut 1s forwards' }}
+            style={{ animation: "fadeOut 1s forwards" }}
           >
             <defs>
               <pattern
@@ -118,7 +113,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
               fill={`url(#entity-pattern-fade-${entity.id})`}
             />
           </svg>
-          
+
           {/* Smoke puffs */}
           <svg
             x={getSVGSpriteLocationAdjustment(entity).x - 10}
@@ -144,7 +139,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
               <animate attributeName="r" from="6" to="16" dur="1.3s" fill="freeze" />
             </circle>
           </svg>
-          
+
           {/* Rising spirit */}
           <svg
             x={getSVGSpriteLocationAdjustment(entity).x + 25}
@@ -169,7 +164,7 @@ const EntityRenderer: React.FC<EntityRendererProps> = ({
         </g>
       );
     }
-    
+
     // Show gravestone after animation completes or if we're not animating
     if (entity.defeated && (showGravestone || !isDeathAnimating)) {
       if (!entity.isEnemy) {

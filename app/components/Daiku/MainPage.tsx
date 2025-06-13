@@ -219,7 +219,8 @@ const MainPage = () => {
     const playerPositions = updatedPlayerEntities.map((player) => player.position);
 
     // Generate enemy moves using the enemy AI hook
-    const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap);
+    // Set allowMoveOntoDefeatedEntities to false to maintain current behavior (prevent moving onto defeated entities)
+    const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap, false);
 
     // Set enemy pending moves
     setEnemyPendingMoves(enemyMoves);
@@ -310,15 +311,21 @@ const MainPage = () => {
       selectedEntity &&
       movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
     ) {
-      // Don't highlight if another entity is already there
+      // Don't highlight if another non-defeated entity is already there
       const isOccupiedByOtherPlayer = playerEntities.some(
         (e) =>
-          e.id !== selectedEntity.id && e.position.q === position.q && e.position.r === position.r
+          e.id !== selectedEntity.id && 
+          e.position.q === position.q && 
+          e.position.r === position.r && 
+          !e.defeated // Only consider non-defeated entities as occupying the space
       );
 
-      // Check if enemy is there
+      // Check if non-defeated enemy is there
       const isOccupiedByEnemy = enemyEntities.some(
-        (e) => e.position.q === position.q && e.position.r === position.r
+        (e) => 
+          e.position.q === position.q && 
+          e.position.r === position.r && 
+          !e.defeated // Only consider non-defeated enemies as occupying the space
       );
 
       // Check if another pending move is targeting this position

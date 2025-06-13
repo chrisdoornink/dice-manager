@@ -41,6 +41,9 @@ export const useTileSelection = ({
 
           // If this entity has a pending move, skip it (its current position will be vacated)
           if (pendingMoves.has(entity.id)) return false;
+          
+          // Skip defeated entities - allow movement onto spaces with defeated entities
+          if (entity.defeated) return false;
 
           // Check if this entity's position matches the target position
           return entity.position.q === targetPosition.q && entity.position.r === targetPosition.r;
