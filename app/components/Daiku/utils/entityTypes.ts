@@ -115,6 +115,7 @@ export const playerUnitTypes = {
 };
 
 export const enemyUnitTypes = {
+  // standard sword goblin guy
   clobbin: {
     name: "Clobbin",
     type: "clobbin" as EnemyUnitType,
@@ -142,6 +143,7 @@ export const enemyUnitTypes = {
       canShootOverWater: true,
     },
   },
+  // no sword just shield
   spuddle: {
     name: "Spuddle",
     type: "spuddle" as EnemyUnitType,
@@ -154,19 +156,20 @@ export const enemyUnitTypes = {
       height: 108,
       singleImage: false,
     },
-    movement: 0, // Does not move, only in water tiles
+    movement: 2,
     combat: {
-      power: 1, // Low attack power
-      distance: 2, // Medium range
-      defense: 1, // Low defense
+      power: 3, // Low attack power
+      distance: 1, // Medium range
+      defense: 3, // Low defense
       agility: 1, // Low agility
     },
-    minHealth: 1,
-    maxHealth: 3,
+    minHealth: 3,
+    maxHealth: 6,
     abilities: {
-      waterOnly: true,
+      greatDefenseInForests: true,
     },
   },
+  // groundhog looking thing
   skritcher: {
     name: "Skritcher",
     type: "skritcher" as EnemyUnitType,
@@ -181,8 +184,8 @@ export const enemyUnitTypes = {
     },
     movement: 1, // 1 tile per turn
     combat: {
-      power: 2, // Medium attack power
-      distance: 1, // Low range
+      power: 1, // Medium attack power
+      distance: 5, // Low range
       defense: 3, // High defense
       agility: 1, // Low agility
     },
@@ -193,6 +196,7 @@ export const enemyUnitTypes = {
       closeRangeBrawler: true,
     },
   },
+  // snail looking thing
   whumble: {
     name: "Whumble",
     type: "whumble" as EnemyUnitType,
@@ -212,8 +216,8 @@ export const enemyUnitTypes = {
       defense: 3, // High defense
       agility: 1, // Low agility
     },
-    minHealth: 3,
-    maxHealth: 5,
+    minHealth: 1,
+    maxHealth: 3,
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,

@@ -63,8 +63,9 @@ export const generateEventMessage = (
       adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
+    console.log("not useing the adjective ", adjective, " for now.");
 
-    return `The ${adjective} ${attackerName} ${adverb} ${action} ${targetName} for ${damage} damage! (${currentHealth} → ${newHealth})`;
+    return `The ${attackerName} ${adverb} ${action} ${targetName} for ${damage} damage! (${currentHealth} → ${newHealth})`;
   }
 };
 
@@ -341,12 +342,11 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -360,11 +360,11 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "weakly",
         "stupidly",
         "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -377,21 +377,21 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "accurately",
         "skillfully",
         "expertly",
-        "talented",
-        "gifted",
-        "with talent"
+        "talentedly",
+        "giftedly",
+        "with great aplomb and skill,"
       );
     } else {
       adverbs.push(
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "poorly",
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -404,8 +404,8 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "accurately",
         "skillfully",
         "expertly",
-        "talented",
-        "gifted",
+        "talentedly",
+        "giftedly",
         "with talent"
       );
     } else {
@@ -413,12 +413,12 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "poorly",
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -431,8 +431,8 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "accurately",
         "skillfully",
         "expertly",
-        "talented",
-        "gifted",
+        "talentedly",
+        "giftedly",
         "with talent"
       );
     } else {
@@ -440,12 +440,12 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "poorly",
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -458,8 +458,8 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "accurately",
         "skillfully",
         "expertly",
-        "talented",
-        "gifted",
+        "talentedly",
+        "giftedly",
         "with talent"
       );
     } else {
@@ -467,12 +467,12 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "poorly",
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
@@ -485,8 +485,8 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "accurately",
         "skillfully",
         "expertly",
-        "talented",
-        "gifted",
+        "talentedly",
+        "giftedly",
         "with talent"
       );
     } else {
@@ -494,12 +494,12 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
         "poorly",
         "weakly",
         "stupidly",
-        "poor",
-        "short-sighted",
-        "blind",
-        "clumsy",
-        "lazy",
-        "sleepy"
+        "poorly",
+        "short-sightedly",
+        "blindly",
+        "clumsily",
+        "lazily",
+        "sleepily"
       );
     }
   }
