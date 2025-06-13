@@ -21,6 +21,96 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   enemyEntities,
   currentTurn,
 }) => {
+  
+  // Generate a shareable summary of the game with emojis
+  const generateShareableSummary = () => {
+    // Determine if players won or lost
+    const allPlayersDefeated = playerEntities.every(player => player.defeated);
+    const allEnemiesDefeated = enemyEntities.every(enemy => enemy.defeated);
+    
+    const gameResult = allEnemiesDefeated ? "🏆 VICTORY!" : allPlayersDefeated ? "☠️ DEFEAT!" : "⚔️ ONGOING";
+    
+    // Count total kills for players and enemies
+    const playerKills = playerEntities.reduce((total, player) => total + (player.kills || 0), 0);
+    const enemyKills = enemyEntities.reduce((total, enemy) => total + (enemy.kills || 0), 0);
+    
+    // Count survivors
+    const playersSurvived = playerEntities.filter(player => !player.defeated).length;
+    const totalPlayers = playerEntities.length;
+    const enemiesSurvived = enemyEntities.filter(enemy => !enemy.defeated).length;
+    const totalEnemies = enemyEntities.length;
+    
+    // Build the summary text
+    const lines = [];
+    
+    // Header with fancy border
+    lines.push(`╔══════════════════════════╗`);
+    lines.push(`║  🎲 DAIKU - ${gameResult}  ║`);
+    lines.push(`╚══════════════════════════╝`);
+    
+    // Battle stats
+    lines.push(`🗓️ Turn: ${currentTurn}`);
+    lines.push(``);
+    
+    // Create health bars for each team
+    const playerHealthBar = createHealthBar(playersSurvived, totalPlayers);
+    const enemyHealthBar = createHealthBar(enemiesSurvived, totalEnemies);
+    
+    // Team summaries with health bars
+    lines.push(`👑 HEROES: ${playerHealthBar} (${playersSurvived}/${totalPlayers}) 🎯 ${playerKills} kills`);
+    lines.push(`👹 ENEMIES: ${enemyHealthBar} (${enemiesSurvived}/${totalEnemies}) 🗡️ ${enemyKills} kills`);
+    lines.push(``);
+    
+    // Individual player results
+    lines.push(`🧙‍♂️ HERO DETAILS 🧙‍♂️`);
+    
+    playerEntities.forEach(player => {
+      const unitType = player.entityType.type;
+      const unitEmoji = 
+        unitType === "archer" ? "🏹" : 
+        unitType === "cavalry" ? "🐎" : 
+        unitType === "infantry" ? "🛡️" : 
+        unitType === "mage" ? "🔮" : "⚔️";
+      
+      const status = player.defeated ? "💀" : "❤️";
+      const health = player.entityType.currentHealth || 0;
+      const startingHealth = player.startingHealth || player.entityType.maxHealth;
+      const kills = player.kills || 0;
+      const healthBar = createUnitHealthBar(health, startingHealth);
+      
+      if (player.defeated && player.killedBy) {
+        const killerType = player.killedBy.startsWith('clobbin') ? 'Clobbin' :
+                         player.killedBy.startsWith('spuddle') ? 'Spuddle' :
+                         player.killedBy.startsWith('skritcher') ? 'Skritcher' :
+                         player.killedBy.startsWith('whumble') ? 'Whumble' : 'Enemy';
+        
+        lines.push(`${unitEmoji} ${player.entityType.name}: ${status} ${healthBar} Kills: ${kills} ⚰️ by ${killerType}`);
+      } else {
+        lines.push(`${unitEmoji} ${player.entityType.name}: ${status} ${healthBar} Kills: ${kills}`);
+      }
+    });
+    
+    // Return the formatted text
+    return lines.join('\n');
+  };
+  
+  // Helper to create a health bar for a team
+  const createHealthBar = (surviving: number, total: number): string => {
+    const fullHearts = surviving;
+    const emptyHearts = total - surviving;
+    return '❤️'.repeat(fullHearts) + '🖤'.repeat(emptyHearts);
+  };
+  
+  // Helper to create a health bar for an individual unit
+  const createUnitHealthBar = (current: number, max: number): string => {
+    // Cap at 10 segments for readability
+    const segments = 5;
+    const filledSegments = Math.round((current / max) * segments);
+    const emptySegments = segments - filledSegments;
+    
+    return `[${'█'.repeat(filledSegments)}${'░'.repeat(emptySegments)}] ${current}/${max}`;
+  };
+  
   return (
     <Modal
       open={isOpen}
@@ -121,7 +211,46 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         </Box>
 
         <Divider sx={{ width: "100%", my: 2 }} />
-
+        
+        {/* Shareable Game Summary */}
+        <Box sx={{ width: "100%", mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Shareable Summary
+          </Typography>
+          
+          <Box 
+            sx={{
+              p: 2,
+              backgroundColor: "#f5f5f5",
+              borderRadius: 1,
+              fontFamily: "monospace",
+              position: "relative"
+            }}
+          >
+            {generateShareableSummary()}
+            
+            <Button 
+              variant="contained" 
+              size="small" 
+              sx={{ 
+                position: "absolute", 
+                top: 8, 
+                right: 8,
+                fontSize: "0.7rem",
+                py: 0.5
+              }}
+              onClick={() => {
+                const summary = generateShareableSummary();
+                navigator.clipboard.writeText(summary);
+              }}
+            >
+              Copy
+            </Button>
+          </Box>
+        </Box>
+        
+        <Divider sx={{ width: "100%", my: 2 }} />
+        
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="contained"
