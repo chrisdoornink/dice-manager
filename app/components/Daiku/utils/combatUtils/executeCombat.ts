@@ -175,7 +175,7 @@ export const executeCombat = (
         );
 
         // Calculate damage for this attacker
-        const damage = calculateAttackDamage(
+        const attackResult = calculateAttackDamage(
           attackingPlayer.entityType,
           attackingPlayer.position,
           enemy.position,
@@ -183,15 +183,15 @@ export const executeCombat = (
           enemy.entityType.combat.defense
         );
 
-        if (damage > 0) {
-          totalDamage += damage;
+        if (attackResult.damage > 0) {
+          totalDamage += attackResult.damage;
           attackers.push(attackingPlayer);
 
           const currentHealth = enemy.entityType.currentHealth ?? enemy.entityType.maxHealth;
-          const newHealth = Math.max(0, currentHealth - damage);
+          const newHealth = Math.max(0, currentHealth - attackResult.damage);
 
-          // Log individual attack
-          log(generateEventMessage(attackingPlayer, enemy, damage, currentHealth, newHealth));
+          // Log individual attack with terrain effect information
+          log(generateEventMessage(attackingPlayer, enemy, attackResult.damage, currentHealth, newHealth, terrainType));
         }
       }
 
@@ -288,7 +288,7 @@ export const executeCombat = (
         );
 
         // Calculate damage for this attacker
-        const damage = calculateAttackDamage(
+        const attackResult = calculateAttackDamage(
           attackingEnemy.entityType,
           attackingEnemy.position,
           player.position,
@@ -296,21 +296,21 @@ export const executeCombat = (
           player.entityType.combat.defense
         );
 
-        if (damage > 0) {
-          totalDamage += damage;
+        if (attackResult.damage > 0) {
+          totalDamage += attackResult.damage;
           attackers.push(attackingEnemy);
 
           // Log individual attack
           const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
-          const newHealth = Math.max(0, currentHealth - damage);
-          log(generateEventMessage(attackingEnemy, player, damage, currentHealth, newHealth));
+          const newHealth = Math.max(0, currentHealth - attackResult.damage);
+          log(generateEventMessage(attackingEnemy, player, attackResult.damage, currentHealth, newHealth, terrainType));
         }
       }
 
       // Apply the accumulated damage
       const currentHealth = player.entityType.currentHealth ?? player.entityType.maxHealth;
       const newHealth = Math.max(0, currentHealth - totalDamage);
-
+      
       // Generate summary message if multiple attackers
       if (attackers.length > 1) {
         const attackerNames = attackers.map((a) => a.entityType.name).join(", ");

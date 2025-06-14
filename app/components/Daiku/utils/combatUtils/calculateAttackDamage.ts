@@ -1,6 +1,16 @@
 import { calculateHexDistance, DEFENSE_MULTIPLIER } from ".";
 import { GridPosition, EntityDefinition, TerrainType } from "../types";
 
+export type TerrainEffect = {
+  type: 'advantage' | 'disadvantage' | 'neutral';
+  description: string;
+};
+
+export type AttackResult = {
+  damage: number;
+  terrainEffect: TerrainEffect | null;
+};
+
 /**
  * Calculate attack damage based on attacker, target position, and terrain
  * @param attacker The attacking entity
@@ -15,7 +25,7 @@ export const calculateAttackDamage = (
   targetPos: GridPosition,
   targetTerrainType: TerrainType,
   targetDefense: number
-): number => {
+): AttackResult => {
   // Start with the base power from combat stats
   let damage = attacker.combat.power;
   // Get the distance to target
@@ -23,6 +33,9 @@ export const calculateAttackDamage = (
 
   // Get the range of the attacker
   const range = attacker.combat.distance;
+  
+  // Track terrain effects
+  let terrainEffect: TerrainEffect | null = null;
 
   console.log("---------");
   console.log("Calcluating damage for", attacker.type);
@@ -38,9 +51,17 @@ export const calculateAttackDamage = (
     if (attacker.type === "cavalry" && distance > 1) {
       console.log("cavalry cannot attack from distance", distance, "damage", damage, "->", 0);
       damage = 0;
+      terrainEffect = {
+        type: 'disadvantage',
+        description: "Cavalry can't attack across water"
+      };
     } else if (attacker.type === "mage") {
       console.log("mage cannot attack from distance", distance, "damage", damage, "->", 1);
       damage = 1;
+      terrainEffect = {
+        type: 'disadvantage',
+        description: "Mage power reduced on water"
+      };
     }
   }
 
@@ -52,10 +73,18 @@ export const calculateAttackDamage = (
     if (attacker.abilities.poorAttackInForests) {
       console.log("poor attack in forests, damage", damage, "->", damage - 1);
       damage -= 1;
+      terrainEffect = {
+        type: 'disadvantage',
+        description: "Poor attack in forests"
+      };
     }
     if (attacker.abilities.greatAttackInForests) {
       console.log("great attack in forests, damage", damage, "->", damage + 1);
       damage += 1;
+      terrainEffect = {
+        type: 'advantage',
+        description: "Great attack in forests"
+      };
     }
   }
 
@@ -65,11 +94,19 @@ export const calculateAttackDamage = (
     if (attacker.abilities.poorAttackInMountains) {
       console.log("poor attack in mountains, damage", damage, "->", damage - 1);
       damage -= 1;
+      terrainEffect = {
+        type: 'disadvantage',
+        description: "Poor attack in mountains"
+      };
     }
 
     if (attacker.abilities.greatAttackInMountains) {
       console.log("great attack in mountains, damage", damage, "->", damage + 1);
       damage += 1;
+      terrainEffect = {
+        type: 'advantage',
+        description: "Great attack in mountains"
+      };
     }
   }
 
@@ -79,6 +116,10 @@ export const calculateAttackDamage = (
     if (attacker.abilities.greatAttackInGrass) {
       console.log("great attack in grass, damage", damage, "->", damage + 1);
       damage += 1;
+      terrainEffect = {
+        type: 'advantage',
+        description: "Great attack in grass"
+      };
     }
   }
 
@@ -106,8 +147,9 @@ export const calculateAttackDamage = (
   damage = Math.floor(damage - targetDefense * DEFENSE_MULTIPLIER);
   console.log("damage decreased to", damage, "due to defense:", targetDefense);
 
-  console.log("final damage", Math.max(0, damage));
-  console.log("---------");
-  // Ensure damage is not negative
-  return Math.max(0, damage);
+  console.log("final damage", damage);
+  return {
+    damage: damage > 0 ? damage : 0,
+    terrainEffect
+  };
 };

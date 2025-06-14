@@ -1,14 +1,60 @@
-import { GameEntity } from "../types";
+import { GameEntity, TerrainType } from "../types";
 
 export const generateEventMessage = (
   attacker: GameEntity,
   target: GameEntity,
   damage: number,
   currentHealth: number,
-  newHealth: number
+  newHealth: number,
+  targetTerrainType?: TerrainType
 ) => {
+  // Generate terrain advantage/disadvantage text based on unit type and terrain
+  const getTerrainEffectText = () => {
+    if (!targetTerrainType) return '';
+    
+    const unitType = attacker.entityType.type;
+    
+    // Check for terrain advantages/disadvantages
+    if (targetTerrainType === 'water') {
+      if (unitType === 'cavalry' && damage === 0) {
+        return ` [Disadvantage: Cavalry can't attack across water]`;
+      }
+      if (unitType === 'mage') {
+        return ` [Disadvantage: Mage power reduced on water]`;
+      }
+    }
+    
+    if (targetTerrainType === 'forest') {
+      if (attacker.entityType.abilities?.poorAttackInForests) {
+        return ` [Disadvantage: Poor attack in forests]`;
+      }
+      if (attacker.entityType.abilities?.greatAttackInForests) {
+        return ` [Advantage: Great attack in forests]`;
+      }
+    }
+    
+    if (targetTerrainType === 'mountain') {
+      if (attacker.entityType.abilities?.poorAttackInMountains) {
+        return ` [Disadvantage: Poor attack in mountains]`;
+      }
+      if (attacker.entityType.abilities?.greatAttackInMountains) {
+        return ` [Advantage: Great attack in mountains]`;
+      }
+    }
+    
+    if (targetTerrainType === 'grass') {
+      if (attacker.entityType.abilities?.greatAttackInGrass) {
+        return ` [Advantage: Great attack in grass]`;
+      }
+    }
+    
+    return '';
+  };
+  
+  const terrainEffect = getTerrainEffectText();
+
   if (attacker.isEnemy) {
-    return `${attacker.entityType.name} attacks ${target.entityType.name} for ${damage} damage! (${currentHealth} → ${newHealth})`;
+    return `${attacker.entityType.name} attacks ${target.entityType.name} for ${damage} damage! (${currentHealth} → ${newHealth})${terrainEffect}`;
   } else {
     const attackerName = attacker.entityType.name;
     const targetName = target.entityType.name;
@@ -65,7 +111,7 @@ export const generateEventMessage = (
     }
     console.log("not useing the adjective ", adjective, " for now.");
 
-    return `The ${attackerName} ${adverb} ${action} ${targetName} for ${damage} damage! (${currentHealth} → ${newHealth})`;
+    return `The ${attackerName} ${adverb} ${action} ${targetName} for ${damage} damage! (${currentHealth} → ${newHealth})${terrainEffect}`;
   }
 };
 
@@ -505,16 +551,4 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
   }
 
   return adverbs[Math.floor(Math.random() * adverbs.length)];
-};
-
-const getRandomAction = (success: boolean, attackerName: string) => {
-  if (attackerName === "Archer") {
-    return success ? "shoots" : "misses";
-  }
-
-  const actions = success
-    ? ["attacks", "shoots", "casts fireball at"]
-    : ["misses", "misses", "misses"];
-
-  return actions[Math.floor(Math.random() * actions.length)];
 };
