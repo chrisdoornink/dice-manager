@@ -4,45 +4,79 @@ import { CombatLogEntry } from '../hooks/useCombatLog';
 
 interface CombatLogOverlayProps {
   logEntries: CombatLogEntry[];
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-const CombatLogOverlay: React.FC<CombatLogOverlayProps> = ({ logEntries }) => {
+const CombatLogOverlay: React.FC<CombatLogOverlayProps> = ({ logEntries, isOpen, onToggle }) => {
   // Create a ref for the container element
   const logContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Filter to only show visible entries when not in full view
+  const entriesToShow = isOpen ? logEntries : logEntries.filter(entry => entry.visible);
   
   // Auto-scroll to bottom when log entries change
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
-  }, [logEntries]);
+  }, [entriesToShow]);
   
   return (
-    <Paper
-      ref={logContainerRef}
-      elevation={3}
-      sx={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        maxWidth: '350px',
-        width: '350px',
-        maxHeight: '300px',
-        overflowY: 'auto',
-        padding: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        zIndex: 1000,
-        border: '1px solid #753a1a',
-        borderRadius: '4px',
-      }}
-    >
+    <>
+      {/* Toggle button - always visible */}
+      <Box
+        onClick={onToggle}
+        sx={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: '#ffd700',
+          padding: '5px 10px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          zIndex: 1001,
+          border: '1px solid #753a1a',
+          fontFamily: '"Press Start 2P", cursive',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        {isOpen ? 'Close Log' : 'Combat Log'}
+      </Box>
+      
+      {/* Log overlay - visibility depends on isOpen or if there are visible messages */}
+      {(isOpen || entriesToShow.length > 0) && (
+        <Paper
+          ref={logContainerRef}
+          elevation={3}
+          sx={{
+            position: 'fixed',
+            top: isOpen ? '50px' : '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: isOpen ? '80%' : '350px',
+            width: isOpen ? '80%' : '350px',
+            maxHeight: isOpen ? '400px' : '200px',
+            overflowY: 'auto',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 1000,
+            border: '1px solid #753a1a',
+            borderRadius: '4px',
+            transition: 'all 0.3s ease-in-out',
+          }}
+        >
       <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#ffd700', marginBottom: '5px', fontFamily: '"Press Start 2P", cursive' }}>
         Combat Log
       </Typography>
       
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {logEntries.length > 0 ? (
-          logEntries.map((entry) => (
+        {entriesToShow.length > 0 ? (
+          entriesToShow.map((entry) => (
             <Box key={entry.id} sx={{ 
               backgroundColor: 'rgba(0, 0, 0, 0.4)', 
               padding: '4px 8px',
@@ -65,6 +99,8 @@ const CombatLogOverlay: React.FC<CombatLogOverlayProps> = ({ logEntries }) => {
         )}
       </Box>
     </Paper>
+      )}
+    </>
   );
 };
 

@@ -99,8 +99,8 @@ const MainPage = () => {
   const { isEnemyTurn, setIsEnemyTurn, enemyPendingMoves, setEnemyPendingMoves } = useEnemyTurn();
   const { isCombatPhase, setIsCombatPhase } = useCombatPhase();
 
-  // Use combat log hook
-  const { logEntries, addLogEntry } = useCombatLog();
+  // Setup combat log with new toggle functionality
+  const { logEntries, addLogEntry, clearLog, isLogOpen, toggleLogVisibility } = useCombatLog();
 
   // Access the enemy AI hook
   const { calculateEnemyMoves } = useEnemyAI();
@@ -507,7 +507,11 @@ const MainPage = () => {
       />
 
       {/* Combat Log Overlay */}
-      <CombatLogOverlay logEntries={logEntries} />
+      <CombatLogOverlay 
+        logEntries={logEntries} 
+        isOpen={isLogOpen} 
+        onToggle={toggleLogVisibility} 
+      />
       
       {/* Game Over Modal */}
       <GameOverModal
