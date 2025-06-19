@@ -112,7 +112,14 @@ const MainPage = () => {
   const [gridInitialized, setGridInitialized] = useState(false);
 
   // Use game initialization hook - must be before the save game effect
-  const { initializeNewGame, saveGame } = useGameInitialization({
+  const {
+    initializeNewGame,
+    saveGame,
+    loadGame,
+    initializeWithConfig,
+    getRandomStrategy,
+    getRandomEnemyStrategy,
+  } = useGameInitialization({
     allGridPositions,
     setTerrainMap,
     setPlayerEntities,
@@ -219,8 +226,8 @@ const MainPage = () => {
     const playerPositions = updatedPlayerEntities.map((player) => player.position);
 
     // Generate enemy moves using the enemy AI hook
-    // Set allowMoveOntoDefeatedEntities to false to maintain current behavior (prevent moving onto defeated entities)
-    const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap, false);
+    // setting allowMoveOntoDefeatedEntities to true allows enemies to move onto defeated entities
+    const enemyMoves = calculateEnemyMoves(enemyEntities, playerPositions, terrainMap, true);
 
     // Set enemy pending moves
     setEnemyPendingMoves(enemyMoves);
@@ -314,18 +321,15 @@ const MainPage = () => {
       // Don't highlight if another non-defeated entity is already there
       const isOccupiedByOtherPlayer = playerEntities.some(
         (e) =>
-          e.id !== selectedEntity.id && 
-          e.position.q === position.q && 
-          e.position.r === position.r && 
+          e.id !== selectedEntity.id &&
+          e.position.q === position.q &&
+          e.position.r === position.r &&
           !e.defeated // Only consider non-defeated entities as occupying the space
       );
 
       // Check if non-defeated enemy is there
       const isOccupiedByEnemy = enemyEntities.some(
-        (e) => 
-          e.position.q === position.q && 
-          e.position.r === position.r && 
-          !e.defeated // Only consider non-defeated enemies as occupying the space
+        (e) => e.position.q === position.q && e.position.r === position.r && !e.defeated // Only consider non-defeated enemies as occupying the space
       );
 
       // Check if another pending move is targeting this position
@@ -354,8 +358,8 @@ const MainPage = () => {
 
   // Extended reset game state to also close game over modal
   const handleReset = () => {
-    // Reset game state using the initialization logic
-    initializeNewGame();
+    // Reset game state using the initialization logic with random placement strategies
+    initializeNewGame(getRandomStrategy(), getRandomEnemyStrategy());
     // Also close the game over modal
     setIsGameOverModalOpen(false);
   };
@@ -507,12 +511,8 @@ const MainPage = () => {
       />
 
       {/* Combat Log Overlay */}
-      <CombatLogOverlay 
-        logEntries={logEntries} 
-        isOpen={isLogOpen} 
-        onToggle={toggleLogVisibility} 
-      />
-      
+      <CombatLogOverlay logEntries={logEntries} isOpen={isLogOpen} onToggle={toggleLogVisibility} />
+
       {/* Game Over Modal */}
       <GameOverModal
         isOpen={isGameOverModalOpen}

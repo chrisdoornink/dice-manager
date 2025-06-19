@@ -142,6 +142,29 @@ export const enemyUnitTypes = {
       poorRangeInForests: true,
       canShootOverWater: true,
     },
+    behavior: {
+      default: [
+        { key: "aggressive", value: 5 },
+        { key: "defensive", value: 1 },
+        { key: "flanking", value: 2 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 1 },
+      ],
+      inGroup: [
+        { key: "aggressive", value: 2 },
+        { key: "defensive", value: 1 },
+        { key: "flanking", value: 3 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 2 },
+      ],
+      alone: [
+        { key: "aggressive", value: 1 },
+        { key: "defensive", value: 3 },
+        { key: "flanking", value: 3 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 3 },
+      ],
+    },
   },
   // no sword just shield
   spuddle: {
@@ -158,15 +181,38 @@ export const enemyUnitTypes = {
     },
     movement: 2,
     combat: {
-      power: 3, // Low attack power
-      distance: 1, // Medium range
-      defense: 3, // Low defense
+      power: 3, // High attack power
+      distance: 1, // Low range
+      defense: 3, // High defense
       agility: 1, // Low agility
     },
     minHealth: 3,
     maxHealth: 6,
     abilities: {
       greatDefenseInForests: true,
+    },
+    behavior: {
+      default: [
+        { key: "aggressive", value: 1 },
+        { key: "defensive", value: 3 },
+        { key: "flanking", value: 3 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 3 },
+      ],
+      inGroup: [
+        { key: "aggressive", value: 4 },
+        { key: "defensive", value: 2 },
+        { key: "flanking", value: 2 },
+        { key: "random", value: 0 },
+        { key: "stationary", value: 2 },
+      ],
+      alone: [
+        { key: "aggressive", value: 4 },
+        { key: "defensive", value: 2 },
+        { key: "flanking", value: 2 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 2 },
+      ],
     },
   },
   // groundhog looking thing
@@ -185,15 +231,38 @@ export const enemyUnitTypes = {
     movement: 1, // 1 tile per turn
     combat: {
       power: 1, // Medium attack power
-      distance: 5, // Low range
-      defense: 3, // High defense
-      agility: 1, // Low agility
+      distance: 4, // High range
+      defense: 1, // High defense
+      agility: 2, // Low agility
     },
     minHealth: 2,
     maxHealth: 4,
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,
+    },
+    behavior: {
+      default: [
+        { key: "aggressive", value: 0 },
+        { key: "defensive", value: 3 },
+        { key: "flanking", value: 0 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 7 },
+      ],
+      inGroup: [
+        { key: "aggressive", value: 1 },
+        { key: "defensive", value: 1 },
+        { key: "flanking", value: 0 },
+        { key: "random", value: 2 },
+        { key: "stationary", value: 5 },
+      ],
+      alone: [
+        { key: "aggressive", value: 4 },
+        { key: "defensive", value: 4 },
+        { key: "flanking", value: 0 },
+        { key: "random", value: 2 },
+        { key: "stationary", value: 1 },
+      ],
     },
   },
   // snail looking thing
@@ -221,6 +290,29 @@ export const enemyUnitTypes = {
     abilities: {
       highDefense: true,
       closeRangeBrawler: true,
+    },
+    behavior: {
+      default: [
+        { key: "aggressive", value: 0 },
+        { key: "defensive", value: 3 },
+        { key: "flanking", value: 2 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 4 },
+      ],
+      inGroup: [
+        { key: "aggressive", value: 5 },
+        { key: "defensive", value: 1 },
+        { key: "flanking", value: 1 },
+        { key: "random", value: 2 },
+        { key: "stationary", value: 2 },
+      ],
+      alone: [
+        { key: "aggressive", value: 1 },
+        { key: "defensive", value: 4 },
+        { key: "flanking", value: 1 },
+        { key: "random", value: 1 },
+        { key: "stationary", value: 4 },
+      ],
     },
   },
 };

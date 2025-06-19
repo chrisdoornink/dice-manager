@@ -86,6 +86,7 @@ export interface EntityDefinition {
     poorMovementInWater?: boolean;
     greatMovementInWater?: boolean;
   };
+  behavior: BehaviorSet;
 }
 
 // Player entity with position
@@ -101,6 +102,18 @@ export interface PlayerEntity {
   startingHealth?: number;
   kills?: number;
   currentHealth?: number;
+}
+
+export interface BehaviorSet {
+  default: Situation;
+  inGroup: Situation;
+  alone: Situation;
+}
+export type Situation = Behavior[];
+
+export interface Behavior {
+  key: string;
+  value: number;
 }
 
 // Enemy entity with position

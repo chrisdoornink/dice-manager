@@ -53,11 +53,15 @@ export const calculateMovementRange = (
 
         // Apply terrain specific movement costs
         if (terrainType === "forest" && entity.entityType.abilities.poorMovementInForests) {
-          movementCost = 2; // Forests cost 2 movement for cavalry
+          if (currentMovement > 1) {
+            movementCost = 2; // Forests cost 2 movement for slow forest movers
+          }
         }
 
         if (terrainType === "mountain" && entity.entityType.abilities.poorMovementInMountains) {
-          movementCost = 2; // Mountains cost 2 movement for infantry
+          if (currentMovement > 1) {
+            movementCost = 2; // Mountains cost 2 movement for slow mountain movers
+          }
         }
 
         // If we have enough movement left, add to queue
