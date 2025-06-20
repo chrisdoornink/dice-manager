@@ -360,6 +360,8 @@ const MainPage = () => {
   const handleReset = () => {
     // Reset game state using the initialization logic with random placement strategies
     initializeNewGame(getRandomStrategy(), getRandomEnemyStrategy());
+    // Clear the combat log when starting a new game
+    clearLog();
     // Also close the game over modal
     setIsGameOverModalOpen(false);
   };

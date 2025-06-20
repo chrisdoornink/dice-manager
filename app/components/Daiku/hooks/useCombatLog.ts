@@ -8,14 +8,47 @@ export type CombatLogEntry = {
   queued?: boolean;
 };
 
+// Local storage keys
+const COMBAT_LOG_ENTRIES_KEY = "daiku-combat-log-entries";
+const COMBAT_LOG_ID_COUNTER_KEY = "daiku-combat-log-id-counter";
+
 export const useCombatLog = () => {
-  const [logEntries, setLogEntries] = useState<CombatLogEntry[]>([]);
-  const [idCounter, setIdCounter] = useState(0);
+  // Initialize state from local storage if available
+  const [logEntries, setLogEntries] = useState<CombatLogEntry[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedEntries = localStorage.getItem(COMBAT_LOG_ENTRIES_KEY);
+      return savedEntries ? JSON.parse(savedEntries) : [];
+    }
+    return [];
+  });
+  
+  const [idCounter, setIdCounter] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const savedCounter = localStorage.getItem(COMBAT_LOG_ID_COUNTER_KEY);
+      return savedCounter ? parseInt(savedCounter, 10) : 0;
+    }
+    return 0;
+  });
+  
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [messageQueue, setMessageQueue] = useState<string[]>([]);
   const [processingQueue, setProcessingQueue] = useState(false);
   
   // Process the message queue with a 500ms delay between messages
+  // Save log entries to local storage when they change
+  useEffect(() => {
+    if (typeof window !== "undefined" && logEntries.length > 0) {
+      localStorage.setItem(COMBAT_LOG_ENTRIES_KEY, JSON.stringify(logEntries));
+    }
+  }, [logEntries]);
+
+  // Save id counter to local storage when it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(COMBAT_LOG_ID_COUNTER_KEY, idCounter.toString());
+    }
+  }, [idCounter]);
+
   useEffect(() => {
     if (messageQueue.length > 0 && !processingQueue) {
       setProcessingQueue(true);
@@ -63,8 +96,18 @@ export const useCombatLog = () => {
     []
   );
 
+  // Clear log will now be used explicitly when a new game starts
   const clearLog = useCallback(() => {
     setLogEntries([]);
+    if (typeof window !== "undefined") {
+      // Clear the log entries from local storage
+      localStorage.removeItem(COMBAT_LOG_ENTRIES_KEY);
+    }
+    // Reset the idCounter to 0
+    setIdCounter(0);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(COMBAT_LOG_ID_COUNTER_KEY, "0");
+    }
   }, []);
   
   const toggleLogVisibility = useCallback(() => {

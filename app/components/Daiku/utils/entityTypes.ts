@@ -16,8 +16,8 @@ export const playerUnitTypes = {
     },
     movement: 2, // 2 tiles per turn
     combat: {
-      power: 4, // High attack power (when close)
-      distance: 3, // High range
+      power: 2, // High attack power (when close)
+      distance: 2, // High range
       defense: 1, // Low defense
       agility: 2, // Medium agility
     },
@@ -98,8 +98,8 @@ export const playerUnitTypes = {
     },
     movement: 3, // 3 tiles per turn
     combat: {
-      power: 3, // High attack power
-      distance: 4, // Highest range
+      power: 2, // High attack power
+      distance: 3, // Highest range
       defense: 1, // Low defense
       agility: 2, // Medium agility
     },
