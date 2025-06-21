@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, Box, Typography, Button, Divider } from "@mui/material";
+import GameEndBoardView from "./GameEndBoardView";
 import { PlayerEntity, EnemyEntity } from "../utils/types";
 
 interface GameOverModalProps {
@@ -237,16 +238,22 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                 top: 8, 
                 right: 8,
                 fontSize: "0.7rem",
-                py: 0.5
+                bg: 'copy-code',
+                color: 'bg',
+                _hover: { bg: 'copy-code-hover' }
               }}
-              onClick={() => {
-                const summary = generateShareableSummary();
-                navigator.clipboard.writeText(summary);
-              }}
+              onClick={() => navigator.clipboard.writeText(generateShareableSummary())}
             >
-              Copy
+              Copy to Clipboard
             </Button>
           </Box>
+          
+          {/* Board visualization showing final positions */}
+          <GameEndBoardView 
+            playerEntities={playerEntities}
+            enemyEntities={enemyEntities}
+            size={260}
+          />
         </Box>
         
         <Divider sx={{ width: "100%", my: 2 }} />
