@@ -64,8 +64,14 @@ const GameEndBoardView: React.FC<GameEndBoardViewProps> = ({
     }
   }
   
+  // Define entity types for type safety
+  type EntityInfo = 
+    | { entity: PlayerEntity; type: 'player' } 
+    | { entity: EnemyEntity; type: 'enemy' } 
+    | null;
+
   // Function to get entity at a position
-  const getEntityAtPosition = (position: GridPosition) => {
+  const getEntityAtPosition = (position: GridPosition): EntityInfo => {
     // Check for player entities
     const player = playerEntities.find(
       entity => entity.position.q === position.q && entity.position.r === position.r
