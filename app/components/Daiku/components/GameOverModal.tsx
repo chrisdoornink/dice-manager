@@ -133,6 +133,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
     return `[${"█".repeat(filledSegments)}${"░".repeat(emptySegments)}] ${current}/${max}`;
   };
 
+  // Determine if players won or lost for the title
+  const allPlayersDefeated = playerEntities.every((player) => player.defeated);
+  const allEnemiesDefeated = enemyEntities.every((enemy) => enemy.defeated);
+  
+  // Set the title based on the game outcome
+  const gameOverTitle = allEnemiesDefeated ? "Victory!" : allPlayersDefeated ? "Defeat!" : "Game Over";
+  
   return (
     <Modal
       open={isOpen}
@@ -159,8 +166,14 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           borderRadius: 2,
         }}
       >
-        <Typography id="game-over-title" variant="h4" component="h2" mb={2}>
-          Game Over
+        <Typography 
+          id="game-over-title" 
+          variant="h4" 
+          component="h2" 
+          mb={2}
+          color={allEnemiesDefeated ? "success.main" : allPlayersDefeated ? "error.main" : "text.primary"}
+        >
+          {gameOverTitle}
         </Typography>
 
         <Typography id="game-over-message" sx={{ mt: 2, mb: 2 }}>
