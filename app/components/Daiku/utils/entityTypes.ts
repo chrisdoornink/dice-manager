@@ -57,9 +57,9 @@ export const playerUnitTypes = {
       poorMovementInForests: true,
     },
   },
-  infantry: {
-    name: "Infantry",
-    type: "infantry" as PlayerUnitType,
+  warrior: {
+    name: "Warrior",
+    type: "warrior" as PlayerUnitType,
     color: "#66BB6A", // Green
     spriteSheetSprite: {
       spritesheet: "/images/entities/entity_sprites_v1.png",

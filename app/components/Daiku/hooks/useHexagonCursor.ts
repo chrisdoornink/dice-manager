@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { HexagonData, GridPosition, PlayerEntity } from '../utils/types';
+import { useMemo } from "react";
+import { HexagonData, GridPosition, PlayerEntity } from "../utils/types";
 
 interface UseHexagonCursorProps {
   position: HexagonData;
@@ -20,33 +20,33 @@ export const useHexagonCursor = ({
 }: UseHexagonCursorProps): string => {
   // Calculate if the current position is in the movement range
   const isInMovementRange = useMemo(() => {
-    return selectedEntity && 
-      movementRangeHexagons.some(
-        (pos) => pos.q === position.q && pos.r === position.r
-      );
+    return (
+      selectedEntity &&
+      movementRangeHexagons.some((pos) => pos.q === position.q && pos.r === position.r)
+    );
   }, [selectedEntity, movementRangeHexagons, position]);
 
   // Determine cursor style based on selected entity and movement range
   const cursorStyle = useMemo(() => {
     if (!isInMovementRange) {
-      return 'pointer';
+      return "pointer";
     }
 
     // No selected entity means use default pointer
     if (!selectedEntity) {
-      return 'pointer';
+      return "pointer";
     }
 
     // Determine cursor based on entity type
     switch (selectedEntity.entityType.type) {
-      case 'archer':
-        return customCursors.archer || 'crosshair';
-      case 'cavalry':
-        return customCursors.cavalry || 'crosshair';  
-      case 'infantry':
-        return customCursors.infantry || 'crosshair';
+      case "archer":
+        return customCursors.archer || "crosshair";
+      case "cavalry":
+        return customCursors.cavalry || "crosshair";
+      case "warrior":
+        return customCursors.warrior || "crosshair";
       default:
-        return 'crosshair';
+        return "crosshair";
     }
   }, [isInMovementRange, selectedEntity, customCursors]);
 

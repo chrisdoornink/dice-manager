@@ -32,7 +32,7 @@ const PlayerStatusFooter: React.FC<PlayerStatusFooterProps> = ({ playerEntities 
         divWidth = "40px"; // Cavalry are often wider
         backgroundPosition = `-34px -20px`;
         break;
-      case "infantry":
+      case "warrior":
         backgroundPosition = `-0px -20px`;
         break;
       case "mage":

@@ -10,21 +10,21 @@ export const generateEventMessage = (
 ) => {
   // Generate terrain advantage/disadvantage text based on unit type and terrain
   const getTerrainEffectText = () => {
-    if (!targetTerrainType) return '';
-    
+    if (!targetTerrainType) return "";
+
     const unitType = attacker.entityType.type;
-    
+
     // Check for terrain advantages/disadvantages
-    if (targetTerrainType === 'water') {
-      if (unitType === 'cavalry' && damage === 0) {
+    if (targetTerrainType === "water") {
+      if (unitType === "cavalry" && damage === 0) {
         return ` [Disadvantage: Cavalry can't attack across water]`;
       }
-      if (unitType === 'mage') {
+      if (unitType === "mage") {
         return ` [Disadvantage: Mage power reduced on water]`;
       }
     }
-    
-    if (targetTerrainType === 'forest') {
+
+    if (targetTerrainType === "forest") {
       if (attacker.entityType.abilities?.poorAttackInForests) {
         return ` [Disadvantage: Poor attack in forests]`;
       }
@@ -32,8 +32,8 @@ export const generateEventMessage = (
         return ` [Advantage: Great attack in forests]`;
       }
     }
-    
-    if (targetTerrainType === 'mountain') {
+
+    if (targetTerrainType === "mountain") {
       if (attacker.entityType.abilities?.poorAttackInMountains) {
         return ` [Disadvantage: Poor attack in mountains]`;
       }
@@ -41,20 +41,20 @@ export const generateEventMessage = (
         return ` [Advantage: Great attack in mountains]`;
       }
     }
-    
-    if (targetTerrainType === 'grass') {
+
+    if (targetTerrainType === "grass") {
       if (attacker.entityType.abilities?.greatAttackInGrass) {
         return ` [Advantage: Great attack in grass]`;
       }
     }
-    
-    return '';
+
+    return "";
   };
-  
+
   const terrainEffect = getTerrainEffectText();
 
   if (attacker.isEnemy) {
-    return `${attacker.entityType.name} attacks ${target.entityType.name} for ${damage} damage! (${currentHealth} → ${newHealth})${terrainEffect}`;
+    return `${attacker.entityType.name} attacks ${target.entityType.name} for ${damage} damage. (${currentHealth} → ${newHealth})${terrainEffect}`;
   } else {
     const attackerName = attacker.entityType.name;
     const targetName = target.entityType.name;
@@ -64,54 +64,54 @@ export const generateEventMessage = (
 
     if (attackerName === "Archer") {
       action = damage > 0 ? "shoots" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Cavalry") {
       action = damage > 0 ? "charges at" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Mage") {
       action = damage > 0 ? "casts fireball at" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
-    if (attackerName === "Infantry") {
+    if (attackerName === "Warrior") {
       action = damage > 0 ? "attacks" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Clobbin") {
       action = damage > 0 ? "charges at" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Spuddle") {
       action = damage > 0 ? "squirts at" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Skritcher") {
       action = damage > 0 ? "stratches at" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
 
     if (attackerName === "Whumble") {
       action = damage > 0 ? "whumps on" : "misses";
-      adverb = getRandomAdverb(damage > 0, attackerName);
+      // adverb = getRandomAdverb(damage > 0, attackerName);
       adjective = getRandomAdjective(damage > 0, attackerName);
     }
     console.log("not useing the adjective ", adjective, " for now.");
 
-    return `The ${attackerName} ${adverb} ${action} ${targetName} for ${damage} damage! (${currentHealth} → ${newHealth})${terrainEffect}`;
+    return `${attackerName} ${action} ${targetName} for ${damage} damage. (${currentHealth} → ${newHealth})${terrainEffect}`;
   }
 };
 
@@ -208,7 +208,7 @@ const getRandomAdjective = (success: boolean, attackerName: string) => {
     }
   }
 
-  if (attackerName === "Infantry") {
+  if (attackerName === "Warrior") {
     if (success) {
       adjectives.push(
         "brave",
@@ -415,7 +415,7 @@ const getRandomAdverb = (success: boolean, attackerName: string) => {
     }
   }
 
-  if (attackerName === "Infantry") {
+  if (attackerName === "Warrior") {
     if (success) {
       adverbs.push(
         "quickly",
